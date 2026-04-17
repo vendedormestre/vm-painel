@@ -29,31 +29,41 @@ SECURITY DEFINER
 SET search_path = public, dashboard
 AS $$
   WITH base AS (
+    -- Explicit ::timestamptz cast ensures correct comparison regardless of
+    -- whether aplicacao.created_at is stored as timestamp or timestamptz.
     SELECT
       a.cargo,
       a.empresa,
       a.fullname,
       a.email,
       a.whatsapp,
-      a.created_at,
-      COALESCE(a.utm_source, 'Direto')  AS utm_source,
-      COALESCE(f.status, 'novo')        AS status_atual,
+      a.created_at::timestamptz                 AS created_at,
+      COALESCE(a.utm_source, 'Direto')           AS utm_source,
+      COALESCE(f.status, 'novo')                 AS status_atual,
       FLOOR(
         EXTRACT(EPOCH FROM
-          (NOW() - COALESCE(f.updated_at, a.created_at))
+          (NOW() - COALESCE(f.updated_at::timestamptz, a.created_at::timestamptz))
         ) / 86400
-      )::int                            AS dias_sem_atualizacao
+      )::int                                     AS dias_sem_atualizacao
     FROM public.aplicacao a
     LEFT JOIN dashboard.feedback_candidatos f ON f.candidato_email = a.email
     WHERE a.cargo IS NOT NULL AND a.empresa IS NOT NULL
   ),
 
+  -- Query aplicacao directly (no feedback join needed here) so MAX returns a
+  -- clean timestamptz that compares correctly with the period_start parameter.
   grupos AS (
-    SELECT cargo, empresa, MAX(created_at) AS ultimo_candidato
-    FROM base
-    GROUP BY cargo, empresa
+    SELECT
+      a.cargo,
+      a.empresa,
+      MAX(a.created_at::timestamptz) AS ultimo_candidato
+    FROM public.aplicacao a
+    WHERE a.cargo IS NOT NULL AND a.empresa IS NOT NULL
+    GROUP BY a.cargo, a.empresa
   ),
 
+  -- Filter: exclude encerrado groups; apply period window using ultimo_candidato.
+  -- Both sides of >= are timestamptz — no implicit timezone cast.
   grupos_ativos AS (
     SELECT g.cargo, g.empresa
     FROM grupos g
@@ -63,6 +73,7 @@ AS $$
       AND (period_start IS NULL OR g.ultimo_candidato >= period_start)
   ),
 
+  -- Top utm_source per group by candidate count
   canal_ranked AS (
     SELECT cargo, empresa, utm_source
     FROM (
