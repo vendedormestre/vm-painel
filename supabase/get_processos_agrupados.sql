@@ -29,7 +29,6 @@ SECURITY DEFINER
 SET search_path = public, dashboard
 AS $$
   WITH base AS (
-    -- Join aplicacao with feedbacks; canonicalise utm_source and status here
     SELECT
       a.cargo,
       a.empresa,
@@ -37,26 +36,24 @@ AS $$
       a.email,
       a.whatsapp,
       a.created_at,
-      COALESCE(a.utm_source, 'Direto')          AS utm_source,
-      COALESCE(f.status,    'novo')              AS status_atual,
+      COALESCE(a.utm_source, 'Direto')  AS utm_source,
+      COALESCE(f.status, 'novo')        AS status_atual,
       FLOOR(
         EXTRACT(EPOCH FROM
           (NOW() - COALESCE(f.updated_at, a.created_at))
         ) / 86400
-      )::int                                     AS dias_sem_atualizacao
+      )::int                            AS dias_sem_atualizacao
     FROM public.aplicacao a
     LEFT JOIN dashboard.feedback_candidatos f ON f.candidato_email = a.email
     WHERE a.cargo IS NOT NULL AND a.empresa IS NOT NULL
   ),
 
-  -- Latest candidate per group — used for period filtering
   grupos AS (
     SELECT cargo, empresa, MAX(created_at) AS ultimo_candidato
     FROM base
     GROUP BY cargo, empresa
   ),
 
-  -- Keep only active groups: not encerrado AND within the requested period
   grupos_ativos AS (
     SELECT g.cargo, g.empresa
     FROM grupos g
@@ -66,7 +63,6 @@ AS $$
       AND (period_start IS NULL OR g.ultimo_candidato >= period_start)
   ),
 
-  -- Top canal per group (utm_source with highest candidate count)
   canal_ranked AS (
     SELECT cargo, empresa, utm_source
     FROM (
@@ -79,7 +75,7 @@ AS $$
           ORDER BY COUNT(*) DESC
         ) AS rn
       FROM base b
-      JOIN grupos_ativos ga USING (cargo, empresa)
+      JOIN grupos_ativos ga ON ga.cargo = b.cargo AND ga.empresa = b.empresa
       GROUP BY b.cargo, b.empresa, b.utm_source
     ) t
     WHERE rn = 1
@@ -99,7 +95,6 @@ AS $$
     MAX(b.created_at)                            AS ultimo_candidato,
     MAX(cr.utm_source)                           AS canal_principal,
 
-    -- Funil stages (cumulative, matching the JS logic)
     COUNT(*)::bigint                             AS funil_cadastrados,
     COUNT(*) FILTER (WHERE b.status_atual IN (
       'contactado','video_enviado','aprovado_triagem','contratado'
@@ -113,13 +108,11 @@ AS $$
     COUNT(*) FILTER (WHERE b.status_atual = 'contratado')::bigint
                                                  AS funil_contratados,
 
-    -- Stuck candidates: > 2 days without update, not in a terminal status
     COUNT(*) FILTER (
       WHERE b.dias_sem_atualizacao > 2
         AND b.status_atual NOT IN ('contratado','reprovado','descartado')
     )::bigint                                    AS parados,
 
-    -- Full candidate list as JSON, newest first — used in the accordion
     jsonb_agg(
       jsonb_build_object(
         'fullname',             b.fullname,
@@ -137,9 +130,12 @@ AS $$
     )                                            AS candidatos
 
   FROM base b
-  JOIN  grupos_ativos ga                         USING (cargo, empresa)
-  LEFT JOIN dashboard.processos_seletivos ps     ON ps.cargo = b.cargo AND ps.empresa = b.empresa
-  LEFT JOIN canal_ranked cr                      USING (cargo, empresa)
+  JOIN grupos_ativos ga
+    ON ga.cargo = b.cargo AND ga.empresa = b.empresa
+  LEFT JOIN dashboard.processos_seletivos ps
+    ON ps.cargo = b.cargo AND ps.empresa = b.empresa
+  LEFT JOIN canal_ranked cr
+    ON cr.cargo = b.cargo AND cr.empresa = b.empresa
   GROUP BY
     b.cargo, b.empresa,
     ps.id, ps.status, ps.vagas_abertas, ps.meta_contratacoes,
