@@ -177,32 +177,34 @@ export async function getProcessosAtivos(pp: ProcessosPeriod = '3m'): Promise<Pr
   const feedbackMap: Record<string, FeedbackRow> = {}
   ;(allFeedbacksRes.data as FeedbackRow[] ?? []).forEach(f => { feedbackMap[f.candidato_email] = f })
 
-  // Filter candidates by period BEFORE grouping
-  // ISO string comparison is safe: "2026-04-01T..." >= "2026-04-01T00:00:00.000Z" works lexicographically
-  const periodStart = getProcessosPeriodStart(pp)
+  // Group ALL candidates — no period filter here, so each card shows the full history
   const allCandidatos: AplicacaoRow[] = (allCandidatosRes.data ?? []) as AplicacaoRow[]
-  const filtered = periodStart
-    ? allCandidatos.filter(c => c.created_at >= periodStart)
-    : allCandidatos
-
-  // Group by cargo+empresa AFTER period filter — only groups with candidates in the period appear
   const groups: Record<string, AplicacaoRow[]> = {}
-  filtered.forEach(c => {
+  allCandidatos.forEach(c => {
     if (!c.cargo || !c.empresa) return
     const key = `${c.cargo}|${c.empresa}`
     if (!groups[key]) groups[key] = []
     groups[key].push(c)
   })
 
+  // Period filter is applied at GROUP level: a group appears only if its most recent
+  // candidate (ultimoCandidato) falls within the selected period.
+  const periodStart = getProcessosPeriodStart(pp)
   const now = new Date()
 
   return Object.entries(groups)
-    .filter(([key]) => processoMap[key]?.status !== 'encerrado')
+    .filter(([key, rows]) => {
+      if (processoMap[key]?.status === 'encerrado') return false
+      if (!periodStart) return true
+      // Find most recent created_at in this group (ISO string max)
+      const latest = rows.reduce((max, r) => (r.created_at > max ? r.created_at : max), '')
+      return latest >= periodStart
+    })
     .map(([key, rows]) => {
       const [cargo, empresa] = key.split('|')
       return buildProcessoData(cargo, empresa, processoMap[key] ?? null, rows, feedbackMap, now)
     })
-    // Sort: most recent last candidate first
+    // Sort: most recent ultimoCandidato first
     .sort((a, b) => {
       const tA = a.ultimoCandidato ? new Date(a.ultimoCandidato).getTime() : 0
       const tB = b.ultimoCandidato ? new Date(b.ultimoCandidato).getTime() : 0

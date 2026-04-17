@@ -53,6 +53,7 @@ type PageProps = {
     empresa?: string
     status?: string
     pp?: string
+    lp?: string
   }>
 }
 
@@ -61,6 +62,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const period = (VALID_PERIODS.includes(params.period ?? '') ? params.period : 'mes') as Period
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1)
   const pp = (VALID_PP.includes(params.pp as ProcessosPeriod) ? params.pp : '3m') as ProcessosPeriod
+  const lp = (VALID_PP.includes(params.lp as ProcessosPeriod) ? params.lp : 'all') as ProcessosPeriod
 
   return (
     <div className="px-6 py-8 max-w-7xl mx-auto flex flex-col gap-10">
@@ -123,7 +125,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
           }
         >
-          <LeadsB2B period={period} />
+          <LeadsB2B lp={lp} />
         </Suspense>
       </ModuleSection>
     </div>

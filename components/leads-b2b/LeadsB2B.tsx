@@ -1,7 +1,9 @@
 import { getLeadsB2BData } from '@/lib/leads-b2b'
-import { Period } from '@/lib/data'
+import { ProcessosPeriod } from '@/lib/processos'
 import { TendenciaChart } from './TendenciaChart'
 import { LeadsTable } from './LeadsTable'
+import { Suspense } from 'react'
+import { LeadsPeriodFilter } from './LeadsPeriodFilter'
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -14,10 +16,10 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   )
 }
 
-export async function LeadsB2B({ period }: { period: Period }) {
+export async function LeadsB2B({ lp }: { lp: ProcessosPeriod }) {
   let data
   try {
-    data = await getLeadsB2BData(period)
+    data = await getLeadsB2BData(lp)
   } catch (e) {
     console.error('[LeadsB2B]', e)
     return (
@@ -46,6 +48,9 @@ export async function LeadsB2B({ period }: { period: Period }) {
 
   return (
     <div className="flex flex-col gap-5">
+      <Suspense fallback={null}>
+        <LeadsPeriodFilter current={lp} />
+      </Suspense>
       <div className="flex items-center gap-3 flex-wrap">
         <span className="text-3xl font-bold" style={{ fontFamily: 'var(--font-syne)', color: '#D4001F' }}>
           {data.total.toLocaleString('pt-BR')}

@@ -1,5 +1,5 @@
 import { createAdminClient } from './supabase'
-import { Period, getPeriodDates } from './data'
+import { ProcessosPeriod, getProcessosPeriodStart } from './processos'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = () => createAdminClient() as any
@@ -30,18 +30,18 @@ function fmtWeek(iso: string) {
   return `${day}/${m}`
 }
 
-export async function getLeadsB2BData(period: Period) {
-  const { start, end } = getPeriodDates(period)
+export async function getLeadsB2BData(lp: ProcessosPeriod) {
+  const periodStart = getProcessosPeriodStart(lp)
   const supabase = db()
 
+  let leadsQuery = createAdminClient()
+    .from('leads')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (periodStart) leadsQuery = leadsQuery.gte('created_at', periodStart)
+
   const [leadsRes, feedbacksRes, totalRes] = await Promise.all([
-    // Use * to avoid case-sensitivity issues with column "Nome"
-    createAdminClient()
-      .from('leads')
-      .select('*')
-      .gte('created_at', start)
-      .lte('created_at', end)
-      .order('created_at', { ascending: false }),
+    leadsQuery,
     supabase.schema('dashboard').from('feedback_leads_b2b').select('lead_email, status'),
     // Count without date filter — used for diagnostic
     createAdminClient().from('leads').select('*', { count: 'exact', head: true }),
