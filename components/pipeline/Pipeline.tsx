@@ -21,12 +21,13 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 type Props = {
   period: Period
   page: number
+  pageSize: number
   cargo?: string
   empresa?: string
   status?: string
 }
 
-export async function Pipeline({ period, page, cargo, empresa, status }: Props) {
+export async function Pipeline({ period, page, pageSize, cargo, empresa, status }: Props) {
   let volumeData, funnelData, channelData
 
   try {
@@ -59,7 +60,7 @@ export async function Pipeline({ period, page, cargo, empresa, status }: Props) 
       </Card>
 
       <Card title="Candidatos recentes">
-        <CandidatesTable period={period} page={page} cargo={cargo} empresa={empresa} status={status} />
+        <CandidatesTable period={period} page={page} pageSize={pageSize} cargo={cargo} empresa={empresa} status={status} />
       </Card>
     </div>
   )

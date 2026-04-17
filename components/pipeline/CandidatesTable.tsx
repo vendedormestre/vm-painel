@@ -34,18 +34,19 @@ function fmtPhone(p: string | null) {
 type Props = {
   period: Period
   page: number
+  pageSize: number
   cargo?: string
   empresa?: string
   status?: string
 }
 
-export async function CandidatesTable({ period, page, cargo, empresa, status }: Props) {
+export async function CandidatesTable({ period, page, pageSize, cargo, empresa, status }: Props) {
   let result
   let filterOptions
 
   try {
     ;[result, filterOptions] = await Promise.all([
-      getCandidates(period, page, { cargo, empresa, status }),
+      getCandidates(period, page, { cargo, empresa, status }, pageSize),
       getCandidateFilters(),
     ])
   } catch {
@@ -56,7 +57,7 @@ export async function CandidatesTable({ period, page, cargo, empresa, status }: 
     )
   }
 
-  const { candidates, total, pages } = result
+  const { candidates, total, pages, pageSize: ps = pageSize } = result
 
   return (
     <div className="flex flex-col gap-4">
@@ -151,9 +152,9 @@ export async function CandidatesTable({ period, page, cargo, empresa, status }: 
         </table>
       </div>
 
-      {pages > 1 && (
+      {(pages > 1 || total > 10) && (
         <Suspense fallback={null}>
-          <PaginationControls page={page} pages={pages} />
+          <PaginationControls page={page} pages={Math.max(1, pages)} total={total} pageSize={ps} />
         </Suspense>
       )}
     </div>

@@ -132,11 +132,11 @@ export type Candidate = {
 export async function getCandidates(
   period: Period,
   page: number = 1,
-  filters: { cargo?: string; empresa?: string; status?: string } = {}
+  filters: { cargo?: string; empresa?: string; status?: string } = {},
+  pageSize: number = 20
 ) {
   const supabase = createAdminClient()
   const { start, end } = getPeriodDates(period)
-  const pageSize = 20
   const offset = (page - 1) * pageSize
 
   let emailFilter: string[] | null = null
@@ -188,7 +188,7 @@ export async function getCandidates(
     candidates = candidates.filter(c => c.status_atual === 'novo')
   }
 
-  return { candidates, total: count ?? 0, pages: Math.ceil((count ?? 0) / pageSize) }
+  return { candidates, total: count ?? 0, pages: Math.ceil((count ?? 0) / pageSize), pageSize }
 }
 
 export async function getCandidateFilters() {
