@@ -1,19 +1,5 @@
 import { createAdminClient } from './supabase'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = () => createAdminClient() as any
-
-type FeedbackRow = { candidato_email: string; status: string; updated_at: string }
-type AplicacaoRow = {
-  fullname: string | null
-  email: string
-  whatsapp: string | null
-  utm_source: string | null
-  created_at: string
-  cargo: string | null
-  empresa: string | null
-}
-
 export type CandidatoProcesso = {
   fullname: string | null
   email: string
@@ -53,7 +39,7 @@ export type ProcessoData = {
 
 export type ProcessosPeriod = 'mes' | '3m' | 'all'
 
-// Returns an ISO string in UTC for safe lexicographic comparison with created_at values
+// Returns an ISO string in UTC for safe comparison with timestamptz values
 export function getProcessosPeriodStart(pp: ProcessosPeriod): string | null {
   const now = new Date()
   switch (pp) {
@@ -72,8 +58,6 @@ export function getProcessosPeriodStart(pp: ProcessosPeriod): string | null {
       return null
   }
 }
-
-const TERMINAL = ['contratado', 'reprovado', 'descartado']
 
 function computeSaude(funil: FunilEtapa[]): Saude {
   if (funil[0].count === 0) return { tipo: 'saudavel' }
@@ -101,113 +85,43 @@ function computeSaude(funil: FunilEtapa[]): Saude {
   return { tipo: 'saudavel' }
 }
 
-function buildProcessoData(
-  cargo: string,
-  empresa: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  processo: Record<string, any> | null,
-  rows: AplicacaoRow[],
-  feedbackMap: Record<string, FeedbackRow>,
-  now: Date
-): ProcessoData {
-  const candidatos: CandidatoProcesso[] = rows
-    .map(r => {
-      const fb = feedbackMap[r.email]
-      const status_atual = fb?.status ?? 'novo'
-      const lastUpdate = fb?.updated_at ? new Date(fb.updated_at) : new Date(r.created_at)
-      const dias = Math.floor((now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24))
-      const parado = dias > 2 && !TERMINAL.includes(status_atual)
-      return { fullname: r.fullname, email: r.email, whatsapp: r.whatsapp, created_at: r.created_at, status_atual, dias_sem_atualizacao: dias, parado }
-    })
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-
-  const cnt = (s: string[]) => candidatos.filter(c => s.includes(c.status_atual)).length
-
-  const funil: FunilEtapa[] = [
-    { label: 'Cadastrados', count: rows.length },
-    { label: 'Contactados', count: cnt(['contactado', 'video_enviado', 'aprovado_triagem', 'contratado']) },
-    { label: 'Vídeo enviado', count: cnt(['video_enviado', 'aprovado_triagem', 'contratado']) },
-    { label: 'Aprovados', count: cnt(['aprovado_triagem', 'contratado']) },
-    { label: 'Contratados', count: cnt(['contratado']) },
-  ]
-
-  const canalCount: Record<string, number> = {}
-  rows.forEach(r => { const s = r.utm_source || 'Direto'; canalCount[s] = (canalCount[s] || 0) + 1 })
-  const canalPrincipal = Object.entries(canalCount).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
-
-  return {
-    id: processo?.id ?? null,
-    cargo,
-    empresa,
-    status: processo?.status ?? 'ativo',
-    vagas_abertas: processo?.vagas_abertas != null ? Number(processo.vagas_abertas) : null,
-    meta_contratacoes: processo?.meta_contratacoes != null ? Number(processo.meta_contratacoes) : null,
-    data_inicio: processo?.data_inicio ?? null,
-    observacoes: processo?.observacoes ?? null,
-    created_at: processo?.created_at ?? null,
-    totalCandidatos: rows.length,
-    parados: candidatos.filter(c => c.parado).length,
-    contratados: cnt(['contratado']),
-    ultimoCandidato: candidatos[0]?.created_at ?? null,
-    canalPrincipal,
-    funil,
-    saude: computeSaude(funil),
-    candidatos,
-  }
-}
-
 export async function getProcessosAtivos(pp: ProcessosPeriod = '3m'): Promise<ProcessoData[]> {
-  const supabase = db()
-
-  const [processosRes, allFeedbacksRes, allCandidatosRes] = await Promise.all([
-    supabase.schema('dashboard').from('processos_seletivos').select('*'),
-    supabase.schema('dashboard').from('feedback_candidatos').select('candidato_email, status, updated_at'),
-    createAdminClient().from('aplicacao').select('fullname, email, whatsapp, utm_source, created_at, cargo, empresa'),
-  ])
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const processos: Record<string, any>[] = processosRes.data ?? []
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const processoMap: Record<string, Record<string, any>> = {}
-  processos.forEach(p => {
-    if (p.cargo && p.empresa) processoMap[`${p.cargo}|${p.empresa}`] = p
-  })
-
-  const feedbackMap: Record<string, FeedbackRow> = {}
-  ;(allFeedbacksRes.data as FeedbackRow[] ?? []).forEach(f => { feedbackMap[f.candidato_email] = f })
-
-  // Group ALL candidates — no period filter here, so each card shows the full history
-  const allCandidatos: AplicacaoRow[] = (allCandidatosRes.data ?? []) as AplicacaoRow[]
-  const groups: Record<string, AplicacaoRow[]> = {}
-  allCandidatos.forEach(c => {
-    if (!c.cargo || !c.empresa) return
-    const key = `${c.cargo}|${c.empresa}`
-    if (!groups[key]) groups[key] = []
-    groups[key].push(c)
-  })
-
-  // Period filter is applied at GROUP level: a group appears only if its most recent
-  // candidate (ultimoCandidato) falls within the selected period.
   const periodStart = getProcessosPeriodStart(pp)
-  const now = new Date()
 
-  return Object.entries(groups)
-    .filter(([key, rows]) => {
-      if (processoMap[key]?.status === 'encerrado') return false
-      if (!periodStart) return true
-      // Find most recent created_at in this group (ISO string max)
-      const latest = rows.reduce((max, r) => (r.created_at > max ? r.created_at : max), '')
-      return latest >= periodStart
-    })
-    .map(([key, rows]) => {
-      const [cargo, empresa] = key.split('|')
-      return buildProcessoData(cargo, empresa, processoMap[key] ?? null, rows, feedbackMap, now)
-    })
-    // Sort: most recent ultimoCandidato first
-    .sort((a, b) => {
-      const tA = a.ultimoCandidato ? new Date(a.ultimoCandidato).getTime() : 0
-      const tB = b.ultimoCandidato ? new Date(b.ultimoCandidato).getTime() : 0
-      return tB - tA
-    })
+  const { data, error } = await createAdminClient().rpc('get_processos_agrupados', {
+    period_start: periodStart,
+  })
+
+  if (error) throw new Error(`[processos] RPC error: ${error.message}`)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data ?? []).map((row: Record<string, any>): ProcessoData => {
+    const funil: FunilEtapa[] = [
+      { label: 'Cadastrados',   count: Number(row.funil_cadastrados) },
+      { label: 'Contactados',   count: Number(row.funil_contactados) },
+      { label: 'Vídeo enviado', count: Number(row.funil_video_enviado) },
+      { label: 'Aprovados',     count: Number(row.funil_aprovados) },
+      { label: 'Contratados',   count: Number(row.funil_contratados) },
+    ]
+
+    return {
+      id:                row.processo_id ?? null,
+      cargo:             row.cargo,
+      empresa:           row.empresa,
+      status:            row.processo_status ?? 'ativo',
+      vagas_abertas:     row.vagas_abertas     != null ? Number(row.vagas_abertas)     : null,
+      meta_contratacoes: row.meta_contratacoes != null ? Number(row.meta_contratacoes) : null,
+      data_inicio:       row.data_inicio       ?? null,
+      observacoes:       row.observacoes       ?? null,
+      created_at:        row.processo_created_at ?? null,
+      totalCandidatos:   Number(row.total_candidatos),
+      parados:           Number(row.parados),
+      contratados:       Number(row.funil_contratados),
+      ultimoCandidato:   row.ultimo_candidato  ?? null,
+      canalPrincipal:    row.canal_principal   ?? null,
+      funil,
+      saude:             computeSaude(funil),
+      candidatos:        (row.candidatos ?? []) as CandidatoProcesso[],
+    }
+  })
 }
