@@ -56,7 +56,10 @@ export function ProcessoCard({ processo }: { processo: ProcessoData }) {
 
   const max = processo.funil[0].count || 1
 
+  const hasId = processo.id !== null
+
   async function saveObs() {
+    if (!hasId) return
     setSaving(true)
     await fetch(`/api/processos/${processo.id}`, {
       method: 'PATCH',
@@ -68,6 +71,7 @@ export function ProcessoCard({ processo }: { processo: ProcessoData }) {
   }
 
   async function encerrar() {
+    if (!hasId) return
     if (!confirm(`Encerrar o processo "${processo.cargo}" em ${processo.empresa}?`)) return
     setEncerring(true)
     await fetch(`/api/processos/${processo.id}`, {
@@ -220,35 +224,45 @@ export function ProcessoCard({ processo }: { processo: ProcessoData }) {
             >
               Observações gerais
             </label>
-            <textarea
-              value={obs}
-              onChange={e => setObs(e.target.value)}
-              rows={3}
-              placeholder="Adicione observações sobre este processo..."
-              className="w-full text-sm rounded-lg px-3 py-2 resize-none outline-none"
-              style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-dm-sans)', color: '#0A0A0A', backgroundColor: '#FFFFFF' }}
-            />
-            <button
-              onClick={saveObs}
-              disabled={saving}
-              className="mt-2 px-4 py-1.5 rounded-md text-sm disabled:opacity-50"
-              style={{ backgroundColor: '#0A0A0A', color: '#F5F4F2', fontFamily: 'var(--font-dm-sans)' }}
-            >
-              {saving ? 'Salvando...' : 'Salvar observações'}
-            </button>
+            {hasId ? (
+              <>
+                <textarea
+                  value={obs}
+                  onChange={e => setObs(e.target.value)}
+                  rows={3}
+                  placeholder="Adicione observações sobre este processo..."
+                  className="w-full text-sm rounded-lg px-3 py-2 resize-none outline-none"
+                  style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-dm-sans)', color: '#0A0A0A', backgroundColor: '#FFFFFF' }}
+                />
+                <button
+                  onClick={saveObs}
+                  disabled={saving}
+                  className="mt-2 px-4 py-1.5 rounded-md text-sm disabled:opacity-50"
+                  style={{ backgroundColor: '#0A0A0A', color: '#F5F4F2', fontFamily: 'var(--font-dm-sans)' }}
+                >
+                  {saving ? 'Salvando...' : 'Salvar observações'}
+                </button>
+              </>
+            ) : (
+              <p className="text-xs py-2" style={{ color: '#C8C7C3', fontFamily: 'var(--font-dm-sans)' }}>
+                Crie um processo via &ldquo;+ Novo processo&rdquo; para habilitar observações e encerramento.
+              </p>
+            )}
           </div>
 
-          {/* Encerrar */}
-          <div className="flex justify-end pt-2 border-t" style={{ borderColor: '#E8E7E4' }}>
-            <button
-              onClick={encerrar}
-              disabled={encerring}
-              className="px-4 py-2 rounded-md text-sm disabled:opacity-50 transition-opacity hover:opacity-80"
-              style={{ backgroundColor: '#FEE2E2', color: '#991B1B', fontFamily: 'var(--font-dm-sans)' }}
-            >
-              {encerring ? 'Encerrando...' : 'Encerrar processo'}
-            </button>
-          </div>
+          {/* Encerrar — only for processes with a real DB record */}
+          {hasId && (
+            <div className="flex justify-end pt-2 border-t" style={{ borderColor: '#E8E7E4' }}>
+              <button
+                onClick={encerrar}
+                disabled={encerring}
+                className="px-4 py-2 rounded-md text-sm disabled:opacity-50 transition-opacity hover:opacity-80"
+                style={{ backgroundColor: '#FEE2E2', color: '#991B1B', fontFamily: 'var(--font-dm-sans)' }}
+              >
+                {encerring ? 'Encerrando...' : 'Encerrar processo'}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

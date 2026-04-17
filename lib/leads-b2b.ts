@@ -26,8 +26,8 @@ function getWeekStart(dateStr: string): string {
 }
 
 function fmtWeek(iso: string) {
-  const [, m, d] = iso.split('-')
-  return `${d}/${m}`
+  const [, m, day] = iso.split('-')
+  return `${day}/${m}`
 }
 
 export async function getLeadsB2BData(period: Period) {
@@ -35,29 +35,37 @@ export async function getLeadsB2BData(period: Period) {
   const supabase = db()
 
   const [leadsRes, feedbacksRes] = await Promise.all([
+    // Use * to avoid case-sensitivity issues with column "Nome"
     createAdminClient()
       .from('leads')
-      .select('"Nome", email, empresa, whatsapp, created_at, utm_source')
+      .select('*')
       .gte('created_at', start)
       .lte('created_at', end)
       .order('created_at', { ascending: false }),
     supabase.schema('dashboard').from('feedback_leads_b2b').select('lead_email, status'),
   ])
 
-  const rows = (leadsRes.data ?? []) as Record<string, string>[]
+  if (leadsRes.error) {
+    console.error('[leads-b2b] query error:', leadsRes.error)
+    throw new Error(leadsRes.error.message)
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rows = (leadsRes.data ?? []) as Record<string, any>[]
   const statusMap: Record<string, string> = {}
   ;((feedbacksRes.data ?? []) as { lead_email: string; status: string }[]).forEach(f => {
     statusMap[f.lead_email] = f.status
   })
 
   const leads: LeadB2B[] = rows.map(r => ({
-    nome: r['Nome'] ?? null,
-    email: r.email,
-    empresa: r.empresa ?? null,
-    whatsapp: r.whatsapp ?? null,
+    // Handle both "Nome" (case-sensitive) and "nome" (lowercased by Postgres)
+    nome: r['Nome'] ?? r['nome'] ?? null,
+    email: r.email ?? r.Email ?? '',
+    empresa: r.empresa ?? r.Empresa ?? null,
+    whatsapp: r.whatsapp ?? r.Whatsapp ?? null,
     created_at: r.created_at,
     utm_source: r.utm_source ?? null,
-    status_atual: statusMap[r.email] ?? 'novo',
+    status_atual: statusMap[r.email ?? r.Email ?? ''] ?? 'novo',
   }))
 
   const weekGroups: Record<string, number> = {}
