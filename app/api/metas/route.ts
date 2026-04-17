@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const adminDb = () => createAdminClient() as any
-
 async function auth() {
   const store = await cookies()
   return store.get('vm_session')?.value === 'authenticated'
@@ -30,27 +27,27 @@ export async function GET(request: NextRequest) {
   const { periodoDate, start, end } = parsed
 
   const supabase = createAdminClient()
-  const db = adminDb()
 
   const [metasRes, candidatosRes, contratadosRes, leadsRes] = await Promise.all([
-    db.schema('dashboard').from('metas').select('*').eq('periodo', periodoDate).maybeSingle(),
+    supabase.rpc('get_meta_por_periodo', { p_periodo: periodoDate }),
     supabase.from('aplicacao').select('*', { count: 'exact', head: true }).gte('created_at', start).lt('created_at', end),
-    db.schema('dashboard').from('feedback_candidatos').select('*', { count: 'exact', head: true }).eq('status', 'contratado').gte('updated_at', start).lt('updated_at', end),
+    supabase.rpc('count_contratados_no_periodo', { p_start: start, p_end: end }),
     supabase.from('leads').select('*', { count: 'exact', head: true }).gte('created_at', start).lt('created_at', end),
   ])
 
+  const metasRow = Array.isArray(metasRes.data) ? (metasRes.data[0] ?? null) : null
   const realizado_leads = leadsRes.count ?? 0
-  const verba = Number(metasRes.data?.verba_investida ?? 0)
+  const verba = Number(metasRow?.verba_investida ?? 0)
   const realizado_cpl = realizado_leads > 0 && verba > 0
     ? Math.round((verba / realizado_leads) * 100) / 100
     : null
 
   return NextResponse.json({
     periodo: rawPeriodo,
-    metas:   metasRes.data ?? null,
+    metas:   metasRow,
     realizado: {
       candidatos:   candidatosRes.count ?? 0,
-      contratacoes: contratadosRes.count ?? 0,
+      contratacoes: (contratadosRes.data as number | null) ?? 0,
       leads:        realizado_leads,
       cpl:          realizado_cpl,
     },
@@ -66,24 +63,17 @@ export async function POST(request: NextRequest) {
   const parsed = parsePeriodo(periodo ?? '')
   if (!parsed) return NextResponse.json({ error: 'periodo inválido (use YYYY-MM)' }, { status: 400 })
 
-  const { data, error } = await adminDb()
-    .schema('dashboard')
-    .from('metas')
-    .upsert(
-      {
-        periodo:          parsed.periodoDate,
-        meta_candidatos:  meta_candidatos  ?? null,
-        meta_contratacoes: meta_contratacoes ?? null,
-        meta_leads:       meta_leads        ?? null,
-        verba_investida:  verba_investida   ?? null,
-        meta_cpl:         meta_cpl          ?? null,
-        updated_at:       new Date().toISOString(),
-      },
-      { onConflict: 'periodo' }
-    )
-    .select()
-    .single()
+  const { data, error } = await createAdminClient().rpc('upsert_meta', {
+    p_periodo:           parsed.periodoDate,
+    p_meta_candidatos:   meta_candidatos   ?? null,
+    p_meta_contratacoes: meta_contratacoes ?? null,
+    p_meta_leads:        meta_leads        ?? null,
+    p_verba_investida:   verba_investida   ?? null,
+    p_meta_cpl:          meta_cpl          ?? null,
+  })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+  const row = Array.isArray(data) ? (data[0] ?? null) : null
+  if (!row) return NextResponse.json({ error: 'Nenhum registro retornado pelo upsert' }, { status: 500 })
+  return NextResponse.json(row)
 }
