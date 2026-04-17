@@ -34,7 +34,7 @@ export async function getLeadsB2BData(period: Period) {
   const { start, end } = getPeriodDates(period)
   const supabase = db()
 
-  const [leadsRes, feedbacksRes] = await Promise.all([
+  const [leadsRes, feedbacksRes, totalRes] = await Promise.all([
     // Use * to avoid case-sensitivity issues with column "Nome"
     createAdminClient()
       .from('leads')
@@ -43,6 +43,8 @@ export async function getLeadsB2BData(period: Period) {
       .lte('created_at', end)
       .order('created_at', { ascending: false }),
     supabase.schema('dashboard').from('feedback_leads_b2b').select('lead_email, status'),
+    // Count without date filter — used for diagnostic
+    createAdminClient().from('leads').select('*', { count: 'exact', head: true }),
   ])
 
   if (leadsRes.error) {
@@ -78,5 +80,5 @@ export async function getLeadsB2BData(period: Period) {
     .map(([semana, count]) => ({ semana, label: fmtWeek(semana), count }))
     .sort((a, b) => a.semana.localeCompare(b.semana))
 
-  return { leads, tendencia, total: leads.length }
+  return { leads, tendencia, total: leads.length, totalGeral: totalRes.count ?? 0 }
 }

@@ -96,10 +96,10 @@ export function ProcessoCard({ processo }: { processo: ProcessoData }) {
               className="font-bold text-base leading-tight truncate"
               style={{ fontFamily: 'var(--font-syne)', color: '#0A0A0A' }}
             >
-              {processo.cargo}
+              {processo.empresa}
             </h3>
             <p className="text-sm mt-0.5" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
-              {processo.empresa}{processo.canalPrincipal ? ` · ${processo.canalPrincipal}` : ''}
+              {processo.cargo}{processo.canalPrincipal ? ` · ${processo.canalPrincipal}` : ''}
             </p>
           </div>
           <span

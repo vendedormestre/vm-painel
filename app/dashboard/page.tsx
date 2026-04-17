@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { Period } from '@/lib/data'
+import { ProcessosPeriod } from '@/lib/processos'
 import { PeriodFilter } from '@/components/PeriodFilter'
 import { KpiBar } from '@/components/kpis/KpiBar'
 import { Pipeline } from '@/components/pipeline/Pipeline'
@@ -42,6 +43,8 @@ function BlockSkeleton({ height }: { height: number }) {
 
 const VALID_PERIODS = ['hoje', '7d', '30d', 'mes']
 
+const VALID_PP: ProcessosPeriod[] = ['mes', '3m', 'all']
+
 type PageProps = {
   searchParams: Promise<{
     period?: string
@@ -49,6 +52,7 @@ type PageProps = {
     cargo?: string
     empresa?: string
     status?: string
+    pp?: string
   }>
 }
 
@@ -56,6 +60,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const params = await searchParams
   const period = (VALID_PERIODS.includes(params.period ?? '') ? params.period : 'mes') as Period
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1)
+  const pp = (VALID_PP.includes(params.pp as ProcessosPeriod) ? params.pp : '3m') as ProcessosPeriod
 
   return (
     <div className="px-6 py-8 max-w-7xl mx-auto flex flex-col gap-10">
@@ -104,7 +109,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             </div>
           }
         >
-          <ProcessosGrid />
+          <ProcessosGrid pp={pp} />
         </Suspense>
       </ModuleSection>
 

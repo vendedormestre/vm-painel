@@ -32,7 +32,6 @@ export type Saude =
   | { tipo: 'gargalo'; etapa: string }
 
 export type ProcessoData = {
-  // null = grupo descoberto automaticamente de aplicacao, sem registro em processos_seletivos
   id: string | null
   cargo: string
   empresa: string
@@ -50,6 +49,24 @@ export type ProcessoData = {
   funil: FunilEtapa[]
   saude: Saude
   candidatos: CandidatoProcesso[]
+}
+
+export type ProcessosPeriod = 'mes' | '3m' | 'all'
+
+export function getProcessosPeriodStart(pp: ProcessosPeriod): Date | null {
+  const now = new Date()
+  switch (pp) {
+    case 'mes':
+      return new Date(now.getFullYear(), now.getMonth(), 1)
+    case '3m': {
+      const d = new Date(now)
+      d.setDate(d.getDate() - 89)
+      d.setHours(0, 0, 0, 0)
+      return d
+    }
+    case 'all':
+      return null
+  }
 }
 
 const TERMINAL = ['contratado', 'reprovado', 'descartado']
@@ -96,15 +113,7 @@ function buildProcessoData(
       const lastUpdate = fb?.updated_at ? new Date(fb.updated_at) : new Date(r.created_at)
       const dias = Math.floor((now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24))
       const parado = dias > 2 && !TERMINAL.includes(status_atual)
-      return {
-        fullname: r.fullname,
-        email: r.email,
-        whatsapp: r.whatsapp,
-        created_at: r.created_at,
-        status_atual,
-        dias_sem_atualizacao: dias,
-        parado,
-      }
+      return { fullname: r.fullname, email: r.email, whatsapp: r.whatsapp, created_at: r.created_at, status_atual, dias_sem_atualizacao: dias, parado }
     })
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
@@ -119,10 +128,7 @@ function buildProcessoData(
   ]
 
   const canalCount: Record<string, number> = {}
-  rows.forEach(r => {
-    const s = r.utm_source || 'Direto'
-    canalCount[s] = (canalCount[s] || 0) + 1
-  })
+  rows.forEach(r => { const s = r.utm_source || 'Direto'; canalCount[s] = (canalCount[s] || 0) + 1 })
   const canalPrincipal = Object.entries(canalCount).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
 
   return {
@@ -146,40 +152,37 @@ function buildProcessoData(
   }
 }
 
-export async function getProcessosAtivos(): Promise<ProcessoData[]> {
+export async function getProcessosAtivos(pp: ProcessosPeriod = '3m'): Promise<ProcessoData[]> {
   const supabase = db()
 
   const [processosRes, allFeedbacksRes, allCandidatosRes] = await Promise.all([
-    // Fetch ALL processes (not just 'ativo') so we can filter out 'encerrado'
     supabase.schema('dashboard').from('processos_seletivos').select('*'),
     supabase.schema('dashboard').from('feedback_candidatos').select('candidato_email, status, updated_at'),
-    createAdminClient()
-      .from('aplicacao')
-      .select('fullname, email, whatsapp, utm_source, created_at, cargo, empresa'),
+    createAdminClient().from('aplicacao').select('fullname, email, whatsapp, utm_source, created_at, cargo, empresa'),
   ])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const processos: Record<string, any>[] = processosRes.data ?? []
-  const allCandidatos: AplicacaoRow[] = allCandidatosRes.data ?? []
 
-  // Index processos by "cargo|empresa" key
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const processoMap: Record<string, Record<string, any>> = {}
   processos.forEach(p => {
-    if (p.cargo && p.empresa) {
-      processoMap[`${p.cargo}|${p.empresa}`] = p
-    }
+    if (p.cargo && p.empresa) processoMap[`${p.cargo}|${p.empresa}`] = p
   })
 
-  // Build feedback map
   const feedbackMap: Record<string, FeedbackRow> = {}
-  ;(allFeedbacksRes.data as FeedbackRow[] ?? []).forEach(f => {
-    feedbackMap[f.candidato_email] = f
-  })
+  ;(allFeedbacksRes.data as FeedbackRow[] ?? []).forEach(f => { feedbackMap[f.candidato_email] = f })
 
-  // Discover all distinct cargo+empresa groups from aplicacao
+  // Apply period filter to candidates
+  const periodStart = getProcessosPeriodStart(pp)
+  const allCandidatos: AplicacaoRow[] = (allCandidatosRes.data ?? []) as AplicacaoRow[]
+  const filtered = periodStart
+    ? allCandidatos.filter(c => new Date(c.created_at) >= periodStart)
+    : allCandidatos
+
+  // Discover distinct cargo+empresa groups from filtered candidates
   const groups: Record<string, AplicacaoRow[]> = {}
-  allCandidatos.forEach(c => {
+  filtered.forEach(c => {
     if (!c.cargo || !c.empresa) return
     const key = `${c.cargo}|${c.empresa}`
     if (!groups[key]) groups[key] = []
@@ -188,15 +191,16 @@ export async function getProcessosAtivos(): Promise<ProcessoData[]> {
 
   const now = new Date()
 
-  return (
-    Object.entries(groups)
-      // Exclude groups where a processo exists with status='encerrado'
-      .filter(([key]) => processoMap[key]?.status !== 'encerrado')
-      .map(([key, rows]) => {
-        const [cargo, empresa] = key.split('|')
-        return buildProcessoData(cargo, empresa, processoMap[key] ?? null, rows, feedbackMap, now)
-      })
-      // Most candidates first
-      .sort((a, b) => b.totalCandidatos - a.totalCandidatos)
-  )
+  return Object.entries(groups)
+    .filter(([key]) => processoMap[key]?.status !== 'encerrado')
+    .map(([key, rows]) => {
+      const [cargo, empresa] = key.split('|')
+      return buildProcessoData(cargo, empresa, processoMap[key] ?? null, rows, feedbackMap, now)
+    })
+    // Sort: most recent last candidate first
+    .sort((a, b) => {
+      const tA = a.ultimoCandidato ? new Date(a.ultimoCandidato).getTime() : 0
+      const tB = b.ultimoCandidato ? new Date(b.ultimoCandidato).getTime() : 0
+      return tB - tA
+    })
 }
