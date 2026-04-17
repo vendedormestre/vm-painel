@@ -6,6 +6,8 @@ import { KpiBar } from '@/components/kpis/KpiBar'
 import { Pipeline } from '@/components/pipeline/Pipeline'
 import { ProcessosGrid } from '@/components/processos/ProcessosGrid'
 import { LeadsB2B } from '@/components/leads-b2b/LeadsB2B'
+import { FeedbackModule } from '@/components/feedback/FeedbackModule'
+import { MetasModule } from '@/components/metas/MetasModule'
 
 function ModuleSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -119,6 +121,27 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           }
         >
           <LeadsB2B lp={lp} />
+        </Suspense>
+      </ModuleSection>
+
+      {/* Módulo 5 — Feedback Comercial */}
+      <ModuleSection title="Feedback Comercial">
+        <Suspense
+          fallback={
+            <div className="flex flex-col gap-5">
+              <BlockSkeleton height={240} />
+              <BlockSkeleton height={200} />
+            </div>
+          }
+        >
+          <FeedbackModule />
+        </Suspense>
+      </ModuleSection>
+
+      {/* Módulo 6 — Metas e Acompanhamento */}
+      <ModuleSection title="Metas e Acompanhamento">
+        <Suspense fallback={<GridSkeleton cols={2} height={360} />}>
+          <MetasModule />
         </Suspense>
       </ModuleSection>
     </div>
