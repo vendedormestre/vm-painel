@@ -16,7 +16,7 @@ export function ProcessosPeriodFilter({ current }: { current: string }) {
   function set(v: string) {
     const params = new URLSearchParams(searchParams)
     params.set('pp', v)
-    router.push(`${pathname}?${params.toString()}`)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
   return (

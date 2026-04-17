@@ -21,7 +21,7 @@ export function PaginationControls({ page, pages }: { page: number; pages: numbe
   function goTo(p: number) {
     const params = new URLSearchParams(searchParams)
     params.set('page', String(p))
-    router.push(`${pathname}?${params.toString()}`)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
   return (

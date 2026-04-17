@@ -35,7 +35,7 @@ export function CandidatesFilters({ cargos, empresas }: { cargos: string[]; empr
     if (value) params.set(key, value)
     else params.delete(key)
     params.delete('page')
-    router.push(`${pathname}?${params.toString()}`)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
   return (

@@ -19,7 +19,7 @@ export function PeriodFilter() {
     const params = new URLSearchParams(searchParams)
     params.set('period', period)
     params.delete('page')
-    router.push(`${pathname}?${params.toString()}`)
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
   return (

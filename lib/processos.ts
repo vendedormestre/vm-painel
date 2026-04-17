@@ -53,16 +53,20 @@ export type ProcessoData = {
 
 export type ProcessosPeriod = 'mes' | '3m' | 'all'
 
-export function getProcessosPeriodStart(pp: ProcessosPeriod): Date | null {
+// Returns an ISO string in UTC for safe lexicographic comparison with created_at values
+export function getProcessosPeriodStart(pp: ProcessosPeriod): string | null {
   const now = new Date()
   switch (pp) {
-    case 'mes':
-      return new Date(now.getFullYear(), now.getMonth(), 1)
+    case 'mes': {
+      const y = now.getUTCFullYear()
+      const m = String(now.getUTCMonth() + 1).padStart(2, '0')
+      return `${y}-${m}-01T00:00:00.000Z`
+    }
     case '3m': {
       const d = new Date(now)
-      d.setDate(d.getDate() - 89)
-      d.setHours(0, 0, 0, 0)
-      return d
+      d.setUTCDate(d.getUTCDate() - 89)
+      d.setUTCHours(0, 0, 0, 0)
+      return d.toISOString()
     }
     case 'all':
       return null
@@ -173,14 +177,15 @@ export async function getProcessosAtivos(pp: ProcessosPeriod = '3m'): Promise<Pr
   const feedbackMap: Record<string, FeedbackRow> = {}
   ;(allFeedbacksRes.data as FeedbackRow[] ?? []).forEach(f => { feedbackMap[f.candidato_email] = f })
 
-  // Apply period filter to candidates
+  // Filter candidates by period BEFORE grouping
+  // ISO string comparison is safe: "2026-04-01T..." >= "2026-04-01T00:00:00.000Z" works lexicographically
   const periodStart = getProcessosPeriodStart(pp)
   const allCandidatos: AplicacaoRow[] = (allCandidatosRes.data ?? []) as AplicacaoRow[]
   const filtered = periodStart
-    ? allCandidatos.filter(c => new Date(c.created_at) >= periodStart)
+    ? allCandidatos.filter(c => c.created_at >= periodStart)
     : allCandidatos
 
-  // Discover distinct cargo+empresa groups from filtered candidates
+  // Group by cargo+empresa AFTER period filter — only groups with candidates in the period appear
   const groups: Record<string, AplicacaoRow[]> = {}
   filtered.forEach(c => {
     if (!c.cargo || !c.empresa) return
