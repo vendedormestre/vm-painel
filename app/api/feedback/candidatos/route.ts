@@ -20,7 +20,7 @@ export async function GET() {
     supabase
       .from('aplicacao')
       .select('fullname, email, whatsapp, cargo, empresa, created_at, utm_source')
-      .order('created_at', { ascending: true }),
+      .order('created_at', { ascending: false }),
     db.schema('dashboard').from('feedback_candidatos').select('candidato_email, status, updated_at, observacoes'),
   ])
 
@@ -62,23 +62,26 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   if (!(await auth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { email, status, observacoes } = await request.json()
-  if (!email || !status) {
-    return NextResponse.json({ error: 'email e status são obrigatórios' }, { status: 400 })
+  const body = await request.json()
+  // Support single email or bulk array
+  const emails: string[] = body.emails ?? (body.email ? [body.email] : [])
+  const { status, observacoes } = body
+
+  if (emails.length === 0 || !status) {
+    return NextResponse.json({ error: 'email(s) e status são obrigatórios' }, { status: 400 })
   }
+
+  const records = emails.map(email => ({
+    candidato_email: email,
+    status,
+    observacoes:     observacoes ?? null,
+    updated_at:      new Date().toISOString(),
+  }))
 
   const { error } = await adminDb()
     .schema('dashboard')
     .from('feedback_candidatos')
-    .upsert(
-      {
-        candidato_email: email,
-        status,
-        observacoes:     observacoes ?? null,
-        updated_at:      new Date().toISOString(),
-      },
-      { onConflict: 'candidato_email' }
-    )
+    .upsert(records, { onConflict: 'candidato_email' })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })

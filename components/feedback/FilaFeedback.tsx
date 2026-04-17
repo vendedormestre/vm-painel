@@ -16,13 +16,38 @@ type Candidato = {
 }
 
 const STATUS_BTNS = [
-  { value: 'contactado',      label: 'Contactado',    color: '#3B82F6' },
-  { value: 'video_enviado',   label: 'Vídeo Enviado', color: '#8B5CF6' },
-  { value: 'aprovado_triagem',label: 'Aprovado',      color: '#10B981' },
-  { value: 'reprovado',       label: 'Reprovado',     color: '#EF4444' },
-  { value: 'descartado',      label: 'Descartado',    color: '#6B7280' },
-  { value: 'contratado',      label: 'Contratado',    color: '#D4001F' },
+  { value: 'contactado',       label: 'Contactado',    color: '#3B82F6' },
+  { value: 'video_enviado',    label: 'Vídeo Enviado', color: '#8B5CF6' },
+  { value: 'aprovado_triagem', label: 'Aprovado',      color: '#10B981' },
+  { value: 'reprovado',        label: 'Reprovado',     color: '#EF4444' },
+  { value: 'descartado',       label: 'Descartado',    color: '#6B7280' },
+  { value: 'contratado',       label: 'Contratado',    color: '#D4001F' },
 ]
+
+const PAGE_SIZES = [10, 25, 50, 100]
+
+const sel: React.CSSProperties = {
+  backgroundColor: '#FFFFFF',
+  border: '1px solid #C8C7C3',
+  borderRadius: 6,
+  padding: '4px 8px',
+  fontSize: 12,
+  fontFamily: 'var(--font-dm-sans)',
+  color: '#0A0A0A',
+  cursor: 'pointer',
+  outline: 'none',
+}
+
+const btn: React.CSSProperties = {
+  border: '1px solid #C8C7C3',
+  borderRadius: 6,
+  padding: '4px 12px',
+  fontSize: 12,
+  fontFamily: 'var(--font-dm-sans)',
+  backgroundColor: '#FFFFFF',
+  color: '#0A0A0A',
+  cursor: 'pointer',
+}
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
@@ -34,9 +59,13 @@ function fmtPhone(p: string | null) {
 
 function CandidatoRow({
   candidato,
+  selected,
+  onToggle,
   onStatusChange,
 }: {
   candidato: Candidato
+  selected: boolean
+  onToggle: (email: string) => void
   onStatusChange: (email: string, status: string) => void
 }) {
   const [obs, setObs] = useState(candidato.observacoes)
@@ -45,7 +74,7 @@ function CandidatoRow({
   async function saveObs() {
     if (obs === savedObs.current) return
     savedObs.current = obs
-    await fetch('/api/feedback/candidatos', {
+    fetch('/api/feedback/candidatos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: candidato.email, status: candidato.status_atual, observacoes: obs }),
@@ -54,12 +83,21 @@ function CandidatoRow({
 
   const phone = fmtPhone(candidato.whatsapp)
   const diasColor =
-    candidato.dias_aguardando > 7 ? { bg: '#FEE2E2', text: '#991B1B' }
+    candidato.dias_aguardando > 7  ? { bg: '#FEE2E2', text: '#991B1B' }
     : candidato.dias_aguardando > 3 ? { bg: '#FEF3C7', text: '#92400E' }
     : { bg: '#F5F4F2', text: '#8A8986' }
 
   return (
-    <tr style={{ borderBottom: '1px solid #F0EFED' }}>
+    <tr style={{ borderBottom: '1px solid #F0EFED', backgroundColor: selected ? '#F5F4F2' : undefined }}>
+      {/* Checkbox */}
+      <td className="px-3 py-3 align-top text-center">
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={() => onToggle(candidato.email)}
+          style={{ cursor: 'pointer', width: 14, height: 14 }}
+        />
+      </td>
       {/* Nome / Cargo */}
       <td className="px-3 py-3 align-top">
         <p className="text-sm font-medium" style={{ color: '#0A0A0A', fontFamily: 'var(--font-dm-sans)' }}>
@@ -87,32 +125,46 @@ function CandidatoRow({
         </span>
       </td>
       {/* Ações */}
-      <td className="px-3 py-3 align-top" style={{ minWidth: 280 }}>
+      <td className="px-3 py-3 align-top" style={{ minWidth: 300 }}>
         <div className="flex flex-wrap gap-1">
-          {STATUS_BTNS.map(btn => (
+          {STATUS_BTNS.map(b => (
             <button
-              key={btn.value}
-              onClick={() => onStatusChange(candidato.email, btn.value)}
+              key={b.value}
+              onClick={() => onStatusChange(candidato.email, b.value)}
               className="text-xs px-2 py-1 rounded transition-opacity hover:opacity-80"
               style={{
-                backgroundColor: `${btn.color}1A`,
-                color: btn.color,
-                border: `1px solid ${btn.color}40`,
+                backgroundColor: `${b.color}1A`,
+                color: b.color,
+                border: `1px solid ${b.color}40`,
                 fontFamily: 'var(--font-dm-sans)',
               }}
             >
-              {btn.label}
+              {b.label}
             </button>
           ))}
         </div>
+        {/* Observação — explicitly interactive */}
         <textarea
           value={obs}
           onChange={e => setObs(e.target.value)}
           onBlur={saveObs}
-          placeholder="Observação..."
-          rows={1}
-          className="mt-2 w-full text-xs rounded px-2 py-1 resize-none outline-none"
-          style={{ border: '1px solid #E8E7E4', fontFamily: 'var(--font-dm-sans)', color: '#0A0A0A', backgroundColor: '#FFFFFF' }}
+          placeholder="Observação (salva ao sair do campo)..."
+          rows={2}
+          style={{
+            marginTop: 6,
+            width: '100%',
+            fontSize: 12,
+            fontFamily: 'var(--font-dm-sans)',
+            color: '#0A0A0A',
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #C8C7C3',
+            borderRadius: 6,
+            padding: '6px 8px',
+            resize: 'vertical',
+            outline: 'none',
+            cursor: 'text',
+            display: 'block',
+          }}
         />
       </td>
       {/* WhatsApp */}
@@ -138,6 +190,11 @@ export function FilaFeedback() {
   const [queue, setQueue] = useState<Candidato[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [pageSize, setPageSize] = useState(10)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [bulkStatus, setBulkStatus] = useState('contactado')
+  const [bulkLoading, setBulkLoading] = useState(false)
 
   useEffect(() => {
     fetch('/api/feedback/candidatos')
@@ -146,8 +203,42 @@ export function FilaFeedback() {
       .catch(e => { setError(e.message); setLoading(false) })
   }, [])
 
+  // Reset to page 1 when page size changes
+  function handlePageSizeChange(size: number) {
+    setPageSize(size)
+    setCurrentPage(1)
+    setSelected(new Set())
+  }
+
+  const totalPages = Math.max(1, Math.ceil(queue.length / pageSize))
+  const safePage = Math.min(currentPage, totalPages)
+  const paginated = queue.slice((safePage - 1) * pageSize, safePage * pageSize)
+
+  // Selection helpers
+  const pageEmails = paginated.map(c => c.email)
+  const allOnPageSelected = pageEmails.length > 0 && pageEmails.every(e => selected.has(e))
+  const someOnPageSelected = pageEmails.some(e => selected.has(e))
+
+  function toggleAll() {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (allOnPageSelected) pageEmails.forEach(e => next.delete(e))
+      else pageEmails.forEach(e => next.add(e))
+      return next
+    })
+  }
+
+  function toggleOne(email: string) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(email) ? next.delete(email) : next.add(email)
+      return next
+    })
+  }
+
   function handleStatusChange(email: string, status: string) {
     setQueue(q => q.filter(c => c.email !== email))
+    setSelected(prev => { const n = new Set(prev); n.delete(email); return n })
     fetch('/api/feedback/candidatos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -155,66 +246,150 @@ export function FilaFeedback() {
     })
   }
 
+  async function applyBulk() {
+    if (selected.size === 0) return
+    setBulkLoading(true)
+    const emails = [...selected]
+    setQueue(q => q.filter(c => !selected.has(c.email)))
+    setSelected(new Set())
+    await fetch('/api/feedback/candidatos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emails, status: bulkStatus }),
+    })
+    setBulkLoading(false)
+  }
+
   if (loading) {
     return <div className="h-48 rounded-xl animate-pulse" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E7E4' }} />
   }
-
   if (error) {
-    return (
-      <p className="text-sm py-4 text-center" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
-        Erro ao carregar fila: {error}
-      </p>
-    )
+    return <p className="text-sm py-4 text-center" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>Erro: {error}</p>
   }
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E7E4' }}>
-      <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: '#E8E7E4' }}>
+      {/* Header */}
+      <div className="px-5 py-4 border-b flex items-center justify-between flex-wrap gap-3" style={{ borderColor: '#E8E7E4' }}>
         <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-syne)', color: '#0A0A0A' }}>
           Fila de feedback
         </h3>
-        {queue.length > 0 ? (
-          <span
-            className="text-xs px-2.5 py-1 rounded-full"
-            style={{ backgroundColor: '#FEF3C7', color: '#92400E', fontFamily: 'var(--font-dm-sans)' }}
-          >
-            {queue.length} aguardando
-          </span>
-        ) : (
-          <span
-            className="text-xs px-2.5 py-1 rounded-full"
-            style={{ backgroundColor: '#D1FAE5', color: '#065F46', fontFamily: 'var(--font-dm-sans)' }}
-          >
-            Em dia ✓
-          </span>
-        )}
+        <div className="flex items-center gap-3 flex-wrap">
+          {queue.length > 0 && (
+            <span className="text-xs px-2.5 py-1 rounded-full" style={{ backgroundColor: '#FEF3C7', color: '#92400E', fontFamily: 'var(--font-dm-sans)' }}>
+              {queue.length} aguardando
+            </span>
+          )}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>por página:</span>
+            <select value={pageSize} onChange={e => handlePageSizeChange(Number(e.target.value))} style={sel}>
+              {PAGE_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
       </div>
+
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <div
+          className="px-5 py-3 flex items-center gap-3 flex-wrap border-b"
+          style={{ backgroundColor: '#F5F4F2', borderColor: '#E8E7E4' }}
+        >
+          <span className="text-xs font-semibold" style={{ color: '#0A0A0A', fontFamily: 'var(--font-dm-sans)' }}>
+            {selected.size} selecionado{selected.size !== 1 ? 's' : ''}
+          </span>
+          <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} style={sel}>
+            {STATUS_BTNS.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
+          </select>
+          <button
+            onClick={applyBulk}
+            disabled={bulkLoading}
+            className="text-xs px-3 py-1.5 rounded disabled:opacity-60"
+            style={{ backgroundColor: '#0A0A0A', color: '#F5F4F2', fontFamily: 'var(--font-dm-sans)', cursor: 'pointer' }}
+          >
+            {bulkLoading ? 'Aplicando...' : 'Aplicar a todos'}
+          </button>
+          <button
+            onClick={() => setSelected(new Set())}
+            className="text-xs px-3 py-1.5 rounded"
+            style={{ ...btn, color: '#8A8986' }}
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
 
       {queue.length === 0 ? (
         <div className="px-5 py-10 text-center">
           <p className="text-sm" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
-            Nenhum candidato aguardando feedback
+            Nenhum candidato aguardando feedback ✓
           </p>
         </div>
       ) : (
-        <div className="overflow-auto" style={{ maxHeight: 480 }}>
-          <table className="w-full text-xs" style={{ minWidth: 740 }}>
-            <thead>
-              <tr style={{ backgroundColor: '#F5F4F2', borderBottom: '1px solid #E8E7E4' }}>
-                {['Nome / Cargo', 'Empresa', 'Entrada', 'Aguardando', 'Ação rápida', 'WA'].map(h => (
-                  <th key={h} className="text-left px-3 py-2 font-medium uppercase tracking-wider" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
-                    {h}
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs" style={{ minWidth: 780 }}>
+              <thead>
+                <tr style={{ backgroundColor: '#F5F4F2', borderBottom: '1px solid #E8E7E4' }}>
+                  <th className="px-3 py-2 text-center" style={{ width: 36 }}>
+                    <input
+                      type="checkbox"
+                      checked={allOnPageSelected}
+                      ref={el => { if (el) el.indeterminate = someOnPageSelected && !allOnPageSelected }}
+                      onChange={toggleAll}
+                      style={{ cursor: 'pointer', width: 14, height: 14 }}
+                      title="Selecionar todos da página"
+                    />
                   </th>
+                  {['Nome / Cargo', 'Empresa', 'Entrada', 'Aguardando', 'Ação rápida / Observação', 'WA'].map(h => (
+                    <th key={h} className="text-left px-3 py-2 font-medium uppercase tracking-wider" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map(c => (
+                  <CandidatoRow
+                    key={c.email}
+                    candidato={c}
+                    selected={selected.has(c.email)}
+                    onToggle={toggleOne}
+                    onStatusChange={handleStatusChange}
+                  />
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {queue.map(c => (
-                <CandidatoRow key={c.email} candidato={c} onStatusChange={handleStatusChange} />
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination footer */}
+          <div
+            className="px-5 py-3 border-t flex items-center justify-between flex-wrap gap-2"
+            style={{ borderColor: '#E8E7E4', backgroundColor: '#FAFAF9' }}
+          >
+            <p className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+              Página {safePage} de {totalPages} · {queue.length} total
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={safePage <= 1}
+                style={btn}
+                className="disabled:opacity-40"
+              >
+                ← Anterior
+              </button>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={safePage >= totalPages}
+                style={btn}
+                className="disabled:opacity-40"
+              >
+                Próximo →
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   )

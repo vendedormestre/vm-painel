@@ -129,6 +129,7 @@ export function MetasModule() {
   const [data, setData] = useState<ApiResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [saveMsg, setSaveMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [form, setForm] = useState<Record<string, string>>({
     meta_candidatos: '', meta_contratacoes: '', meta_leads: '', verba_investida: '', meta_cpl: '',
   })
@@ -170,7 +171,12 @@ export function MetasModule() {
     if (res.ok) {
       const saved: MetasData = await res.json()
       setData(prev => prev ? { ...prev, metas: saved } : null)
+      setSaveMsg({ type: 'ok', text: 'Metas salvas! As barras de progresso foram atualizadas.' })
+    } else {
+      const body = await res.json().catch(() => ({}))
+      setSaveMsg({ type: 'err', text: body.error ?? `Erro ${res.status} ao salvar. Verifique se a tabela dashboard.metas foi criada no Supabase (rodar supabase/create_metas_table.sql).` })
     }
+    setTimeout(() => setSaveMsg(null), 6000)
   }
 
   const r = data?.realizado
@@ -192,6 +198,18 @@ export function MetasModule() {
           <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-syne)', color: '#0A0A0A' }}>
             Cadastrar metas
           </h3>
+          {saveMsg && (
+            <div
+              className="text-xs rounded-lg px-3 py-2"
+              style={{
+                backgroundColor: saveMsg.type === 'ok' ? '#D1FAE5' : '#FEE2E2',
+                color: saveMsg.type === 'ok' ? '#065F46' : '#991B1B',
+                fontFamily: 'var(--font-dm-sans)',
+              }}
+            >
+              {saveMsg.text}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             {FIELDS.map(({ key, label, type, step }) => (
               <div key={key} className="flex flex-col gap-1">
