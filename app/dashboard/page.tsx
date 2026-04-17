@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { Period } from '@/lib/data'
-import { ProcessosPeriod } from '@/lib/processos'
+import { ProcessosPeriod } from '@/lib/processos'  // still used for lp validation
 import { PeriodFilter } from '@/components/PeriodFilter'
 import { KpiBar } from '@/components/kpis/KpiBar'
 import { Pipeline } from '@/components/pipeline/Pipeline'
@@ -61,7 +61,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const params = await searchParams
   const period = (VALID_PERIODS.includes(params.period ?? '') ? params.period : 'mes') as Period
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1)
-  const pp = (VALID_PP.includes(params.pp as ProcessosPeriod) ? params.pp : '3m') as ProcessosPeriod
   const lp = (VALID_PP.includes(params.lp as ProcessosPeriod) ? params.lp : 'all') as ProcessosPeriod
 
   return (
@@ -102,16 +101,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         </Suspense>
       </ModuleSection>
 
-      {/* Módulo 3 — Processos Seletivos */}
+      {/* Módulo 3 — Processos Seletivos (Client Component — reads pp from URL itself) */}
       <ModuleSection title="Processos Seletivos">
-        <Suspense
-          fallback={
-            <div className="flex flex-col gap-4">
-              <GridSkeleton cols={2} height={320} />
-            </div>
-          }
-        >
-          <ProcessosGrid pp={pp} />
+        <Suspense fallback={<GridSkeleton cols={2} height={320} />}>
+          <ProcessosGrid />
         </Suspense>
       </ModuleSection>
 

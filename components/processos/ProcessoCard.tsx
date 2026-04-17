@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { ProcessoData } from '@/lib/processos'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -38,8 +37,7 @@ function Counter({ label, value, alert }: { label: string; value: number; alert?
   )
 }
 
-export function ProcessoCard({ processo }: { processo: ProcessoData }) {
-  const router = useRouter()
+export function ProcessoCard({ processo, onRefresh }: { processo: ProcessoData; onRefresh?: () => void }) {
   const [expanded, setExpanded] = useState(false)
   const [obs, setObs] = useState(processo.observacoes ?? '')
   const [saving, setSaving] = useState(false)
@@ -67,7 +65,7 @@ export function ProcessoCard({ processo }: { processo: ProcessoData }) {
       body: JSON.stringify({ observacoes: obs }),
     })
     setSaving(false)
-    router.refresh()
+    onRefresh?.()
   }
 
   async function encerrar() {
@@ -80,7 +78,7 @@ export function ProcessoCard({ processo }: { processo: ProcessoData }) {
       body: JSON.stringify({ status: 'encerrado', data_encerramento: new Date().toISOString() }),
     })
     setEncerring(false)
-    router.refresh()
+    onRefresh?.()
   }
 
   return (

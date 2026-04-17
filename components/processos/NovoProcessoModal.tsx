@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -30,8 +29,7 @@ function Field({
   )
 }
 
-export function NovoProcessoModal() {
-  const router = useRouter()
+export function NovoProcessoModal({ onCreated }: { onCreated?: () => void }) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -72,7 +70,7 @@ export function NovoProcessoModal() {
     }
 
     close()
-    router.refresh()
+    onCreated?.()
   }
 
   return (
