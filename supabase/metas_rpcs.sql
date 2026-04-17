@@ -11,10 +11,10 @@ ALTER TABLE dashboard.metas ADD COLUMN IF NOT EXISTS updated_at        timestamp
 
 -- ----------------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION public.get_meta_por_periodo(p_periodo date)
+CREATE OR REPLACE FUNCTION public.get_meta_por_periodo(p_periodo text)
 RETURNS TABLE (
   id                uuid,
-  periodo           date,
+  periodo           text,
   meta_candidatos   integer,
   meta_contratacoes integer,
   meta_leads        integer,
@@ -29,7 +29,7 @@ SET search_path = public, dashboard
 AS $$
   SELECT
     id,
-    periodo,
+    periodo::text,
     meta_candidatos,
     meta_contratacoes,
     meta_leads,
@@ -38,7 +38,7 @@ AS $$
     created_at,
     updated_at
   FROM dashboard.metas
-  WHERE periodo = p_periodo;
+  WHERE periodo::text = p_periodo;
 $$;
 
 -- ----------------------------------------------------------------
@@ -62,7 +62,7 @@ $$;
 -- ----------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION public.upsert_meta(
-  p_periodo           date,
+  p_periodo           text,
   p_meta_candidatos   integer,
   p_meta_contratacoes integer,
   p_meta_leads        integer,
@@ -71,7 +71,7 @@ CREATE OR REPLACE FUNCTION public.upsert_meta(
 )
 RETURNS TABLE (
   id                uuid,
-  periodo           date,
+  periodo           text,
   meta_candidatos   integer,
   meta_contratacoes integer,
   meta_leads        integer,
@@ -96,6 +96,6 @@ AS $$
     meta_cpl          = EXCLUDED.meta_cpl,
     updated_at        = now()
   RETURNING
-    id, periodo, meta_candidatos, meta_contratacoes, meta_leads,
+    id, periodo::text, meta_candidatos, meta_contratacoes, meta_leads,
     verba_investida, meta_cpl, created_at, updated_at;
 $$;
