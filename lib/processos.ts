@@ -88,6 +88,8 @@ function computeSaude(funil: FunilEtapa[]): Saude {
 export async function getProcessosAtivos(pp: ProcessosPeriod = '3m'): Promise<ProcessoData[]> {
   const periodStart = getProcessosPeriodStart(pp)
 
+  console.log('[processos] pp recebido:', pp, '| period_start enviado:', periodStart)
+
   const { data, error } = await createAdminClient().rpc('get_processos_agrupados', {
     period_start: periodStart,
   })
