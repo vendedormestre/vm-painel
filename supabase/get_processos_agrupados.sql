@@ -69,7 +69,7 @@ AS $$
     FROM grupos g
     LEFT JOIN dashboard.processos_seletivos ps
            ON ps.cargo = g.cargo AND ps.empresa = g.empresa
-    WHERE ps.status IS DISTINCT FROM 'encerrado'
+    WHERE (ps.status IS NULL OR ps.status != 'encerrado')
       AND (period_start IS NULL OR g.ultimo_candidato >= period_start)
   ),
 
