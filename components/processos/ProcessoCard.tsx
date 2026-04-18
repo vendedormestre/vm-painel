@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { ProcessoData } from '@/lib/processos'
 
+type CampanhaMetrics = { total_spend: number; total_leads: number; cpl_medio: number | null }
+
 const STATUS_LABELS: Record<string, string> = {
   novo: 'Novo', contactado: 'Contactado', video_enviado: 'Vídeo enviado',
   aprovado_triagem: 'Aprovado', reprovado: 'Reprovado',
@@ -37,7 +39,19 @@ function Counter({ label, value, alert }: { label: string; value: number; alert?
   )
 }
 
-export function ProcessoCard({ processo, onRefresh }: { processo: ProcessoData; onRefresh?: () => void }) {
+function fmtBRL(v: number) {
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
+export function ProcessoCard({
+  processo,
+  campanha = null,
+  onRefresh,
+}: {
+  processo: ProcessoData
+  campanha?: CampanhaMetrics | null
+  onRefresh?: () => void
+}) {
   const [expanded, setExpanded] = useState(false)
   const [obs, setObs] = useState(processo.observacoes ?? '')
   const [saving, setSaving] = useState(false)
@@ -108,10 +122,32 @@ export function ProcessoCard({ processo, onRefresh }: { processo: ProcessoData; 
           </span>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mb-5 py-3 rounded-lg" style={{ backgroundColor: '#F5F4F2' }}>
-          <Counter label="Candidatos" value={processo.totalCandidatos} />
-          <Counter label="Parados" value={processo.parados} alert />
-          <Counter label="Contratados" value={processo.contratados} />
+        <div className="rounded-lg overflow-hidden mb-5" style={{ backgroundColor: '#F5F4F2' }}>
+          <div className="grid grid-cols-3 gap-3 py-3">
+            <Counter label="Candidatos" value={processo.totalCandidatos} />
+            <Counter label="Parados" value={processo.parados} alert />
+            <Counter label="Contratados" value={processo.contratados} />
+          </div>
+          {campanha !== null && campanha.total_spend > 0 && (
+            <div
+              className="px-4 py-2 flex items-center gap-2 flex-wrap border-t"
+              style={{ borderColor: '#E8E7E4' }}
+            >
+              <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+                Investido:{' '}
+                <span style={{ color: '#0A0A0A', fontWeight: 600 }}>
+                  {fmtBRL(campanha.total_spend)}
+                </span>
+              </span>
+              <span style={{ color: '#E8E7E4' }}>·</span>
+              <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+                CPL:{' '}
+                <span style={{ color: campanha.cpl_medio !== null ? '#D4001F' : '#0A0A0A', fontWeight: 600 }}>
+                  {campanha.cpl_medio !== null ? fmtBRL(campanha.cpl_medio) : '—'}
+                </span>
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Mini funil */}

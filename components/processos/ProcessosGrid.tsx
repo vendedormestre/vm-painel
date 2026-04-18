@@ -9,6 +9,35 @@ import { ProcessosPeriodFilter } from './ProcessosPeriodFilter'
 
 const VALID_PP: ProcessosPeriod[] = ['mes', '3m', 'all']
 
+type CampanhaMetrics = { total_spend: number; total_leads: number; cpl_medio: number | null; matched_rows: number }
+type CampanhaMap = Record<string, CampanhaMetrics> // key: `${empresa}|${cargo}`
+
+function getPeriodDates(period: string): { from: string; to: string } {
+  const now = new Date()
+  const to = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+  let from: Date
+
+  switch (period) {
+    case 'hoje':
+      from = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      break
+    case '7d':
+      from = new Date(now)
+      from.setDate(from.getDate() - 6)
+      from.setHours(0, 0, 0, 0)
+      break
+    case '30d':
+      from = new Date(now)
+      from.setDate(from.getDate() - 29)
+      from.setHours(0, 0, 0, 0)
+      break
+    default: // 'mes'
+      from = new Date(now.getFullYear(), now.getMonth(), 1)
+  }
+
+  return { from: from.toISOString().split('T')[0], to: to.toISOString().split('T')[0] }
+}
+
 function Skeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -29,10 +58,38 @@ export function ProcessosGrid() {
   const pp: ProcessosPeriod = VALID_PP.includes(rawPp as ProcessosPeriod)
     ? (rawPp as ProcessosPeriod)
     : '3m'
+  const period = searchParams.get('period') ?? 'mes'
 
   const [processos, setProcessos] = useState<ProcessoData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [campanhas, setCampanhas] = useState<CampanhaMap>({})
+
+  const fetchCampanhas = useCallback(async (list: ProcessoData[]) => {
+    if (list.length === 0) return
+    const { from, to } = getPeriodDates(period)
+
+    const results = await Promise.allSettled(
+      list.map(async p => {
+        const params = new URLSearchParams({
+          empresa: p.empresa, cargo: p.cargo, date_from: from, date_to: to,
+        })
+        const res = await fetch(`/api/campanhas?${params}`)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data: CampanhaMetrics = await res.json()
+        return { key: `${p.empresa}|${p.cargo}`, data }
+      })
+    )
+
+    const map: CampanhaMap = {}
+    results.forEach(r => {
+      if (r.status === 'fulfilled' && r.value.data.matched_rows !== 0) {
+        map[r.value.key] = r.value.data
+      }
+    })
+    setCampanhas(map)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period])
 
   const fetchProcessos = useCallback(async () => {
     setLoading(true)
@@ -42,12 +99,13 @@ export function ProcessosGrid() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data: ProcessoData[] = await res.json()
       setProcessos(data)
+      fetchCampanhas(data)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro desconhecido')
     } finally {
       setLoading(false)
     }
-  }, [pp])
+  }, [pp, fetchCampanhas])
 
   useEffect(() => {
     fetchProcessos()
@@ -119,6 +177,7 @@ export function ProcessosGrid() {
                   <ProcessoCard
                     key={`${p.empresa}|${p.cargo}`}
                     processo={p}
+                    campanha={campanhas[`${p.empresa}|${p.cargo}`] ?? null}
                     onRefresh={fetchProcessos}
                   />
                 ))}
