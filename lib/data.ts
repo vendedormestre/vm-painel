@@ -33,14 +33,17 @@ export function getPeriodDates(period: Period) {
 export async function getKpiData(period: Period) {
   const supabase = createAdminClient()
   const { start, end, monthPeriod } = getPeriodDates(period)
+  const dateFrom = start.split('T')[0]
+  const dateTo   = end.split('T')[0]
 
-  const [candidatosRes, leadsRes, feedbackRes, metaRes] = await Promise.all([
+  const [candidatosRes, leadsRes, feedbackRes, metaRes, campanhasRes] = await Promise.all([
     supabase.from('aplicacao').select('*', { count: 'exact', head: true }).gte('created_at', start).lte('created_at', end),
     supabase.from('leads').select('*', { count: 'exact', head: true }).gte('created_at', start).lte('created_at', end),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).schema('dashboard').from('feedback_candidatos').select('status'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).schema('dashboard').from('metas').select('verba_investida').eq('periodo', monthPeriod).maybeSingle(),
+    supabase.from('campanhas_investimento').select('spend, leads').gte('date', dateFrom).lte('date', dateTo),
   ])
 
   const totalCandidatos = candidatosRes.count ?? 0
@@ -55,7 +58,13 @@ export async function getKpiData(period: Period) {
   const taxaContato = totalCandidatos > 0 ? Math.round((contactadosOuSuperior / totalCandidatos) * 100) : 0
 
   const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-  const cpl = verba && totalCandidatos > 0 ? fmt(verba / totalCandidatos) : null
+
+  // CPL Realizado: SUM(spend) / SUM(leads) from campanhas_investimento
+  const campanhas = (campanhasRes.data ?? []) as { spend: number | null; leads: number | null }[]
+  const totalSpend = campanhas.reduce((s, r) => s + (Number(r.spend) || 0), 0)
+  const totalLeadsCamp = campanhas.reduce((s, r) => s + (Number(r.leads) || 0), 0)
+  const cpl = totalLeadsCamp > 0 && totalSpend > 0 ? fmt(totalSpend / totalLeadsCamp) : null
+
   const custoContratacao = verba && contratados > 0 ? fmt(verba / contratados) : null
 
   return { totalCandidatos, totalLeads, taxaContato, contratados, cpl, custoContratacao }

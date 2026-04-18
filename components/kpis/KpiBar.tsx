@@ -58,9 +58,9 @@ export async function KpiBar({ period }: { period: Period }) {
         value={data.contratados.toLocaleString('pt-BR')}
       />
       <KpiCard
-        label="CPL estimado"
+        label="CPL realizado"
         value={data.cpl ?? '—'}
-        sub={data.cpl ? 'verba ÷ candidatos' : 'Verba não cadastrada'}
+        sub={data.cpl ? 'spend ÷ leads (campanhas)' : 'Sem dados de campanhas'}
       />
       <KpiCard
         label="Custo por contratação"
