@@ -125,8 +125,20 @@ function CandidatoRow({
         </span>
       </td>
       {/* Ações */}
-      <td className="px-3 py-3 align-top" style={{ minWidth: 300 }}>
-        <div className="flex flex-wrap gap-1">
+      <td className="px-3 py-3 align-top" style={{ minWidth: 200 }}>
+        {/* Mobile: dropdown */}
+        <div className="sm:hidden mb-1">
+          <select
+            defaultValue=""
+            onChange={e => { if (e.target.value) { onStatusChange(candidato.email, e.target.value); (e.target as HTMLSelectElement).value = '' } }}
+            style={{ ...sel, width: '100%' }}
+          >
+            <option value="" disabled>Atualizar status...</option>
+            {STATUS_BTNS.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
+          </select>
+        </div>
+        {/* Desktop: buttons */}
+        <div className="hidden sm:flex flex-wrap gap-1">
           {STATUS_BTNS.map(b => (
             <button
               key={b.value}
@@ -137,6 +149,7 @@ function CandidatoRow({
                 color: b.color,
                 border: `1px solid ${b.color}40`,
                 fontFamily: 'var(--font-dm-sans)',
+                transition: 'opacity 200ms',
               }}
             >
               {b.label}

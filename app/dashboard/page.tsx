@@ -9,6 +9,7 @@ import { ProcessosGrid } from '@/components/processos/ProcessosGrid'
 import { LeadsB2B } from '@/components/leads-b2b/LeadsB2B'
 import { FeedbackModule } from '@/components/feedback/FeedbackModule'
 import { MetasModule } from '@/components/metas/MetasModule'
+import { AIInsight } from '@/components/ai-insight/AIInsight'
 
 function ModuleSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -73,7 +74,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const tab = VALID_TABS.includes(params.tab ?? '') ? params.tab! : 'candidatos'
 
   return (
-    <div className="px-6 py-8 max-w-7xl mx-auto flex flex-col gap-10">
+    <div className="px-6 py-8 max-w-7xl mx-auto flex flex-col gap-6">
       {/* Header global */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4 flex-wrap">
@@ -161,6 +162,11 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             <Suspense fallback={<GridSkeleton cols={2} height={360} />}>
               <MetasModule />
             </Suspense>
+          </ModuleSection>
+
+          {/* Módulo 6 — Análise IA */}
+          <ModuleSection title="Inteligência Artificial">
+            <AIInsight />
           </ModuleSection>
         </>
       )}
