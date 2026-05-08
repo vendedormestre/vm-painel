@@ -88,7 +88,6 @@ export function ProcessosGrid() {
       }
     })
     setCampanhas(map)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period])
 
   const fetchProcessos = useCallback(async () => {
