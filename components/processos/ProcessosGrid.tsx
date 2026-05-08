@@ -126,7 +126,7 @@ export function ProcessosGrid() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <p className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+        <p className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
           {loading
             ? 'Carregando...'
             : `${processos.length} grupo${processos.length !== 1 ? 's' : ''} · ${empresaOrder.length} empresa${empresaOrder.length !== 1 ? 's' : ''}`}
@@ -140,7 +140,7 @@ export function ProcessosGrid() {
       {loading ? (
         <Skeleton />
       ) : error ? (
-        <p className="text-sm text-center py-4" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+        <p className="text-sm text-center py-4" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
           Erro ao carregar processos: {error}
         </p>
       ) : processos.length === 0 ? (
@@ -148,10 +148,10 @@ export function ProcessosGrid() {
           className="rounded-xl p-10 text-center"
           style={{ backgroundColor: '#FFFFFF', border: '1px dashed #C8C7C3' }}
         >
-          <p className="text-sm mb-1" style={{ color: '#0A0A0A', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-sm mb-1" style={{ color: '#0D0B0A', fontFamily: 'var(--font-barlow)' }}>
             Nenhum candidato no período selecionado
           </p>
-          <p className="text-xs" style={{ color: '#C8C7C3', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-xs" style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}>
             Tente &ldquo;Todo o período&rdquo; ou verifique os dados em <code>public.aplicacao</code>
           </p>
         </div>
@@ -164,7 +164,7 @@ export function ProcessosGrid() {
                   <div className="h-px flex-1" style={{ backgroundColor: '#E8E7E4' }} />
                   <span
                     className="text-xs font-semibold uppercase tracking-widest px-2"
-                    style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}
+                    style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}
                   >
                     {empresa}
                   </span>

@@ -31,15 +31,20 @@ export default function LoginPage() {
   return (
     <main
       className="min-h-screen flex items-center justify-center"
-      style={{ backgroundColor: '#0A0A0A' }}
+      style={{ backgroundColor: '#0D0B0A' }}
     >
       <div className="w-full max-w-sm px-8 py-10 flex flex-col items-center gap-8">
-        <h1
-          className="text-2xl tracking-tight"
-          style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, color: '#F5F4F2' }}
+        <div
+          className="flex flex-col items-center leading-none"
+          style={{ fontFamily: 'var(--font-barlow-condensed), sans-serif', fontWeight: 900 }}
         >
-          Vendedor Mestre
-        </h1>
+          <span className="text-4xl uppercase tracking-tight" style={{ color: '#F4F3F1' }}>
+            VENDEDOR
+          </span>
+          <span className="text-4xl uppercase tracking-tight" style={{ color: '#FF5500' }}>
+            MESTRE
+          </span>
+        </div>
 
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
           <input
@@ -52,15 +57,15 @@ export default function LoginPage() {
             style={{
               backgroundColor: '#1A1A1A',
               border: '1px solid #2A2A2A',
-              color: '#F5F4F2',
-              fontFamily: 'DM Sans, sans-serif',
+              color: '#F4F3F1',
+              fontFamily: 'Barlow, sans-serif',
             }}
           />
 
           {error && (
             <p
               className="text-sm text-center"
-              style={{ color: '#D4001F', fontFamily: 'DM Sans, sans-serif' }}
+              style={{ color: '#FF5500', fontFamily: 'Barlow, sans-serif' }}
             >
               {error}
             </p>
@@ -71,9 +76,9 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-3 rounded-md text-sm font-medium transition-opacity disabled:opacity-60"
             style={{
-              backgroundColor: '#D4001F',
-              color: '#F5F4F2',
-              fontFamily: 'DM Sans, sans-serif',
+              backgroundColor: '#FF5500',
+              color: '#F4F3F1',
+              fontFamily: 'Barlow, sans-serif',
             }}
           >
             {loading ? 'Entrando...' : 'Entrar'}

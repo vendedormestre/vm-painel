@@ -8,8 +8,8 @@ const inputStyle: React.CSSProperties = {
   borderRadius: 6,
   border: '1px solid #C8C7C3',
   fontSize: 14,
-  fontFamily: 'var(--font-dm-sans)',
-  color: '#0A0A0A',
+  fontFamily: 'var(--font-barlow)',
+  color: '#0D0B0A',
   backgroundColor: '#FFFFFF',
   outline: 'none',
 }
@@ -21,7 +21,7 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-medium uppercase tracking-wider" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+      <label htmlFor={id} className="text-xs font-medium uppercase tracking-wider" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
         {label}
       </label>
       <input id={id} type={type} value={value} onChange={e => onChange(e.target.value)} required={required} style={inputStyle} />
@@ -78,7 +78,7 @@ export function NovoProcessoModal({ onCreated }: { onCreated?: () => void }) {
       <button
         onClick={() => setOpen(true)}
         className="px-4 py-2 rounded-md text-sm transition-opacity hover:opacity-80"
-        style={{ backgroundColor: '#D4001F', color: '#F5F4F2', fontFamily: 'var(--font-dm-sans)' }}
+        style={{ backgroundColor: '#FF5500', color: '#F4F3F1', fontFamily: 'var(--font-barlow)' }}
       >
         + Novo processo
       </button>
@@ -90,7 +90,7 @@ export function NovoProcessoModal({ onCreated }: { onCreated?: () => void }) {
           onClick={e => { if (e.target === e.currentTarget) close() }}
         >
           <div className="w-full max-w-md rounded-xl p-6 flex flex-col gap-5" style={{ backgroundColor: '#FFFFFF' }}>
-            <h3 style={{ fontFamily: 'var(--font-syne)', fontWeight: 700, fontSize: '1.125rem', color: '#0A0A0A' }}>
+            <h3 style={{ fontFamily: 'var(--font-barlow-condensed)', fontWeight: 700, fontSize: '1.125rem', color: '#0D0B0A' }}>
               Novo processo seletivo
             </h3>
 
@@ -103,7 +103,7 @@ export function NovoProcessoModal({ onCreated }: { onCreated?: () => void }) {
               </div>
 
               {error && (
-                <p className="text-sm" style={{ color: '#D4001F', fontFamily: 'var(--font-dm-sans)' }}>{error}</p>
+                <p className="text-sm" style={{ color: '#FF5500', fontFamily: 'var(--font-barlow)' }}>{error}</p>
               )}
 
               <div className="flex gap-3 justify-end pt-2">
@@ -111,7 +111,7 @@ export function NovoProcessoModal({ onCreated }: { onCreated?: () => void }) {
                   type="button"
                   onClick={close}
                   className="px-4 py-2 rounded-md text-sm"
-                  style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-dm-sans)', color: '#0A0A0A', backgroundColor: '#FFFFFF' }}
+                  style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-barlow)', color: '#0D0B0A', backgroundColor: '#FFFFFF' }}
                 >
                   Cancelar
                 </button>
@@ -119,7 +119,7 @@ export function NovoProcessoModal({ onCreated }: { onCreated?: () => void }) {
                   type="submit"
                   disabled={loading}
                   className="px-4 py-2 rounded-md text-sm disabled:opacity-60"
-                  style={{ backgroundColor: '#D4001F', color: '#F5F4F2', fontFamily: 'var(--font-dm-sans)' }}
+                  style={{ backgroundColor: '#FF5500', color: '#F4F3F1', fontFamily: 'var(--font-barlow)' }}
                 >
                   {loading ? 'Criando...' : 'Criar processo'}
                 </button>

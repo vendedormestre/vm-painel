@@ -14,7 +14,7 @@ import { AIInsight } from '@/components/ai-insight/AIInsight'
 function ModuleSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-5">
-      <h2 style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: '1.125rem', color: '#0A0A0A' }}>
+      <h2 style={{ fontFamily: 'var(--font-barlow-condensed)', fontWeight: 800, fontSize: '1.125rem', color: '#0D0B0A' }}>
         {title}
       </h2>
       {children}
@@ -78,7 +78,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       {/* Header global */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4 flex-wrap">
-          <h1 style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: '1.5rem', color: '#0A0A0A' }}>
+          <h1 style={{ fontFamily: 'var(--font-barlow-condensed)', fontWeight: 800, fontSize: '1.5rem', color: '#0D0B0A' }}>
             Métricas de Marketing
           </h1>
           <Suspense fallback={null}>

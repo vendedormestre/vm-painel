@@ -19,7 +19,7 @@ export function ConversionFunnel({ stages }: { stages: Stage[] }) {
         return (
           <div key={stage.label}>
             {conversion !== null && (
-              <p className="text-xs mb-1.5" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+              <p className="text-xs mb-1.5" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
                 ↳ {conversion}% avançaram
               </p>
             )}
@@ -29,7 +29,7 @@ export function ConversionFunnel({ stages }: { stages: Stage[] }) {
                   className="h-full rounded-full transition-all"
                   style={{
                     width: `${widthPct}%`,
-                    backgroundColor: '#0A0A0A',
+                    backgroundColor: '#0D0B0A',
                     minWidth: stage.count > 0 ? '1.5rem' : '0',
                   }}
                 />
@@ -37,11 +37,11 @@ export function ConversionFunnel({ stages }: { stages: Stage[] }) {
               <div className="flex items-baseline gap-1.5" style={{ minWidth: '7rem', justifyContent: 'flex-end' }}>
                 <span
                   className="text-base font-semibold"
-                  style={{ fontFamily: 'var(--font-syne)', color: '#0A0A0A' }}
+                  style={{ fontFamily: 'var(--font-barlow-condensed)', color: '#0D0B0A' }}
                 >
                   {stage.count.toLocaleString('pt-BR')}
                 </span>
-                <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+                <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
                   {stage.label}
                 </span>
               </div>

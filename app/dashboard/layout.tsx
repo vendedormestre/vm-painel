@@ -14,14 +14,14 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F5F4F2' }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F4F3F1' }}>
       <header
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4"
-        style={{ backgroundColor: '#0A0A0A' }}
+        style={{ backgroundColor: '#0D0B0A' }}
       >
         <span
           className="text-lg"
-          style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, color: '#F5F4F2' }}
+          style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 800, color: '#F4F3F1' }}
         >
           Vendedor Mestre
         </span>

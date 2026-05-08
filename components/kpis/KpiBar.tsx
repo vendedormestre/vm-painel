@@ -8,18 +8,18 @@ function KpiCard({ label, value, sub }: { label: string; value: string | number;
     >
       <p
         className="text-xs uppercase tracking-wider"
-        style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}
+        style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}
       >
         {label}
       </p>
       <p
         className="text-4xl font-bold leading-none"
-        style={{ color: '#D4001F', fontFamily: 'var(--font-syne)' }}
+        style={{ color: '#FF5500', fontFamily: 'var(--font-barlow-condensed)' }}
       >
         {value}
       </p>
       {sub && (
-        <p className="text-xs" style={{ color: '#C8C7C3', fontFamily: 'var(--font-dm-sans)' }}>
+        <p className="text-xs" style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}>
           {sub}
         </p>
       )}
@@ -33,7 +33,7 @@ export async function KpiBar({ period }: { period: Period }) {
     data = await getKpiData(period)
   } catch {
     return (
-      <p className="text-sm text-center py-4" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+      <p className="text-sm text-center py-4" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
         Erro ao carregar métricas. Tente novamente.
       </p>
     )

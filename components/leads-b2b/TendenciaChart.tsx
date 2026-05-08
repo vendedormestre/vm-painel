@@ -9,7 +9,7 @@ import { SemanaData } from '@/lib/leads-b2b'
 export function TendenciaChart({ data }: { data: SemanaData[] }) {
   if (!data.length) {
     return (
-      <div className="h-40 flex items-center justify-center text-sm" style={{ color: '#C8C7C3', fontFamily: 'var(--font-dm-sans)' }}>
+      <div className="h-40 flex items-center justify-center text-sm" style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}>
         Sem dados no período
       </div>
     )
@@ -39,10 +39,10 @@ export function TendenciaChart({ data }: { data: SemanaData[] }) {
         <Line
           type="monotone"
           dataKey="count"
-          stroke="#D4001F"
+          stroke="#FF5500"
           strokeWidth={2}
-          dot={<Dot r={4} fill="#D4001F" stroke="#FFFFFF" strokeWidth={2} />}
-          activeDot={{ r: 5, fill: '#D4001F' }}
+          dot={<Dot r={4} fill="#FF5500" stroke="#FFFFFF" strokeWidth={2} />}
+          activeDot={{ r: 5, fill: '#FF5500' }}
         />
       </LineChart>
     </ResponsiveContainer>

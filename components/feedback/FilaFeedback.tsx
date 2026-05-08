@@ -21,7 +21,7 @@ const STATUS_BTNS = [
   { value: 'aprovado_triagem', label: 'Aprovado',      color: '#10B981' },
   { value: 'reprovado',        label: 'Reprovado',     color: '#EF4444' },
   { value: 'descartado',       label: 'Descartado',    color: '#6B7280' },
-  { value: 'contratado',       label: 'Contratado',    color: '#D4001F' },
+  { value: 'contratado',       label: 'Contratado',    color: '#FF5500' },
 ]
 
 const PAGE_SIZES = [10, 25, 50, 100]
@@ -32,8 +32,8 @@ const sel: React.CSSProperties = {
   borderRadius: 6,
   padding: '4px 8px',
   fontSize: 12,
-  fontFamily: 'var(--font-dm-sans)',
-  color: '#0A0A0A',
+  fontFamily: 'var(--font-barlow)',
+  color: '#0D0B0A',
   cursor: 'pointer',
   outline: 'none',
 }
@@ -43,9 +43,9 @@ const btn: React.CSSProperties = {
   borderRadius: 6,
   padding: '4px 12px',
   fontSize: 12,
-  fontFamily: 'var(--font-dm-sans)',
+  fontFamily: 'var(--font-barlow)',
   backgroundColor: '#FFFFFF',
-  color: '#0A0A0A',
+  color: '#0D0B0A',
   cursor: 'pointer',
 }
 
@@ -85,10 +85,10 @@ function CandidatoRow({
   const diasColor =
     candidato.dias_aguardando > 7  ? { bg: '#FEE2E2', text: '#991B1B' }
     : candidato.dias_aguardando > 3 ? { bg: '#FEF3C7', text: '#92400E' }
-    : { bg: '#F5F4F2', text: '#8A8986' }
+    : { bg: '#F4F3F1', text: '#8A8986' }
 
   return (
-    <tr style={{ borderBottom: '1px solid #F0EFED', backgroundColor: selected ? '#F5F4F2' : undefined }}>
+    <tr style={{ borderBottom: '1px solid #F0EFED', backgroundColor: selected ? '#F4F3F1' : undefined }}>
       {/* Checkbox */}
       <td className="px-3 py-3 align-top text-center">
         <input
@@ -100,26 +100,26 @@ function CandidatoRow({
       </td>
       {/* Nome / Cargo */}
       <td className="px-3 py-3 align-top">
-        <p className="text-sm font-medium" style={{ color: '#0A0A0A', fontFamily: 'var(--font-dm-sans)' }}>
+        <p className="text-sm font-medium" style={{ color: '#0D0B0A', fontFamily: 'var(--font-barlow)' }}>
           {candidato.fullname || '—'}
         </p>
-        <p className="text-xs mt-0.5" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+        <p className="text-xs mt-0.5" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
           {candidato.cargo || '—'}
         </p>
       </td>
       {/* Empresa */}
-      <td className="px-3 py-3 align-top text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+      <td className="px-3 py-3 align-top text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
         {candidato.empresa || '—'}
       </td>
       {/* Data entrada */}
-      <td className="px-3 py-3 align-top text-xs whitespace-nowrap" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+      <td className="px-3 py-3 align-top text-xs whitespace-nowrap" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
         {fmtDate(candidato.created_at)}
       </td>
       {/* Dias aguardando */}
       <td className="px-3 py-3 align-top text-center">
         <span
           className="text-xs font-semibold px-2 py-0.5 rounded"
-          style={{ backgroundColor: diasColor.bg, color: diasColor.text, fontFamily: 'var(--font-dm-sans)' }}
+          style={{ backgroundColor: diasColor.bg, color: diasColor.text, fontFamily: 'var(--font-barlow)' }}
         >
           {candidato.dias_aguardando}d
         </span>
@@ -148,7 +148,7 @@ function CandidatoRow({
                 backgroundColor: `${b.color}1A`,
                 color: b.color,
                 border: `1px solid ${b.color}40`,
-                fontFamily: 'var(--font-dm-sans)',
+                fontFamily: 'var(--font-barlow)',
                 transition: 'opacity 200ms',
               }}
             >
@@ -167,8 +167,8 @@ function CandidatoRow({
             marginTop: 6,
             width: '100%',
             fontSize: 12,
-            fontFamily: 'var(--font-dm-sans)',
-            color: '#0A0A0A',
+            fontFamily: 'var(--font-barlow)',
+            color: '#0D0B0A',
             backgroundColor: '#FFFFFF',
             border: '1px solid #C8C7C3',
             borderRadius: 6,
@@ -277,24 +277,24 @@ export function FilaFeedback() {
     return <div className="h-48 rounded-xl animate-pulse" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E7E4' }} />
   }
   if (error) {
-    return <p className="text-sm py-4 text-center" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>Erro: {error}</p>
+    return <p className="text-sm py-4 text-center" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>Erro: {error}</p>
   }
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E7E4' }}>
       {/* Header */}
       <div className="px-5 py-4 border-b flex items-center justify-between flex-wrap gap-3" style={{ borderColor: '#E8E7E4' }}>
-        <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-syne)', color: '#0A0A0A' }}>
+        <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-barlow-condensed)', color: '#0D0B0A' }}>
           Fila de feedback
         </h3>
         <div className="flex items-center gap-3 flex-wrap">
           {queue.length > 0 && (
-            <span className="text-xs px-2.5 py-1 rounded-full" style={{ backgroundColor: '#FEF3C7', color: '#92400E', fontFamily: 'var(--font-dm-sans)' }}>
+            <span className="text-xs px-2.5 py-1 rounded-full" style={{ backgroundColor: '#FEF3C7', color: '#92400E', fontFamily: 'var(--font-barlow)' }}>
               {queue.length} aguardando
             </span>
           )}
           <div className="flex items-center gap-1.5">
-            <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>por página:</span>
+            <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>por página:</span>
             <select value={pageSize} onChange={e => handlePageSizeChange(Number(e.target.value))} style={sel}>
               {PAGE_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
@@ -306,9 +306,9 @@ export function FilaFeedback() {
       {selected.size > 0 && (
         <div
           className="px-5 py-3 flex items-center gap-3 flex-wrap border-b"
-          style={{ backgroundColor: '#F5F4F2', borderColor: '#E8E7E4' }}
+          style={{ backgroundColor: '#F4F3F1', borderColor: '#E8E7E4' }}
         >
-          <span className="text-xs font-semibold" style={{ color: '#0A0A0A', fontFamily: 'var(--font-dm-sans)' }}>
+          <span className="text-xs font-semibold" style={{ color: '#0D0B0A', fontFamily: 'var(--font-barlow)' }}>
             {selected.size} selecionado{selected.size !== 1 ? 's' : ''}
           </span>
           <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} style={sel}>
@@ -318,7 +318,7 @@ export function FilaFeedback() {
             onClick={applyBulk}
             disabled={bulkLoading}
             className="text-xs px-3 py-1.5 rounded disabled:opacity-60"
-            style={{ backgroundColor: '#0A0A0A', color: '#F5F4F2', fontFamily: 'var(--font-dm-sans)', cursor: 'pointer' }}
+            style={{ backgroundColor: '#0D0B0A', color: '#F4F3F1', fontFamily: 'var(--font-barlow)', cursor: 'pointer' }}
           >
             {bulkLoading ? 'Aplicando...' : 'Aplicar a todos'}
           </button>
@@ -334,7 +334,7 @@ export function FilaFeedback() {
 
       {queue.length === 0 ? (
         <div className="px-5 py-10 text-center">
-          <p className="text-sm" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-sm" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
             Nenhum candidato aguardando feedback ✓
           </p>
         </div>
@@ -343,7 +343,7 @@ export function FilaFeedback() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs" style={{ minWidth: 780 }}>
               <thead>
-                <tr style={{ backgroundColor: '#F5F4F2', borderBottom: '1px solid #E8E7E4' }}>
+                <tr style={{ backgroundColor: '#F4F3F1', borderBottom: '1px solid #E8E7E4' }}>
                   <th className="px-3 py-2 text-center" style={{ width: 36 }}>
                     <input
                       type="checkbox"
@@ -355,7 +355,7 @@ export function FilaFeedback() {
                     />
                   </th>
                   {['Nome / Cargo', 'Empresa', 'Entrada', 'Aguardando', 'Ação rápida / Observação', 'WA'].map(h => (
-                    <th key={h} className="text-left px-3 py-2 font-medium uppercase tracking-wider" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+                    <th key={h} className="text-left px-3 py-2 font-medium uppercase tracking-wider" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
                       {h}
                     </th>
                   ))}
@@ -380,7 +380,7 @@ export function FilaFeedback() {
             className="px-5 py-3 border-t flex items-center justify-between flex-wrap gap-2"
             style={{ borderColor: '#E8E7E4', backgroundColor: '#FAFAF9' }}
           >
-            <p className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
               Página {safePage} de {totalPages} · {queue.length} total
             </p>
             <div className="flex gap-2">

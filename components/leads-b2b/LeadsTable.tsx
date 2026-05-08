@@ -11,7 +11,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_COLORS: Record<string, string> = {
   novo: '#8A8986', contactado: '#3B82F6', qualificado: '#10B981',
-  fechado: '#D4001F', descartado: '#6B7280',
+  fechado: '#FF5500', descartado: '#6B7280',
 }
 
 const QUICK_ACTIONS = [
@@ -49,7 +49,7 @@ export function LeadsTable({ leads }: { leads: LeadB2B[] }) {
 
   if (!leads.length) {
     return (
-      <p className="text-sm text-center py-8" style={{ color: '#C8C7C3', fontFamily: 'var(--font-dm-sans)' }}>
+      <p className="text-sm text-center py-8" style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}>
         Nenhum lead no período
       </p>
     )
@@ -59,12 +59,12 @@ export function LeadsTable({ leads }: { leads: LeadB2B[] }) {
     <div className="overflow-x-auto rounded-lg" style={{ border: '1px solid #E8E7E4' }}>
       <table className="w-full text-sm min-w-[860px]">
         <thead>
-          <tr style={{ backgroundColor: '#F5F4F2', borderBottom: '1px solid #E8E7E4' }}>
+          <tr style={{ backgroundColor: '#F4F3F1', borderBottom: '1px solid #E8E7E4' }}>
             {['Nome', 'Empresa', 'Email', 'WhatsApp', 'Data', 'Canal', 'Status', 'Ação rápida'].map(c => (
               <th
                 key={c}
                 className="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider"
-                style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}
+                style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}
               >
                 {c}
               </th>
@@ -80,13 +80,13 @@ export function LeadsTable({ leads }: { leads: LeadB2B[] }) {
                 className="transition-colors hover:bg-gray-50"
                 style={{ borderBottom: '1px solid #F0EFED' }}
               >
-                <td className="px-4 py-3 font-medium" style={{ color: '#0A0A0A', fontFamily: 'var(--font-dm-sans)' }}>
+                <td className="px-4 py-3 font-medium" style={{ color: '#0D0B0A', fontFamily: 'var(--font-barlow)' }}>
                   {lead.nome || '—'}
                 </td>
-                <td className="px-4 py-3" style={{ color: '#4A4A4A', fontFamily: 'var(--font-dm-sans)' }}>
+                <td className="px-4 py-3" style={{ color: '#4A4A4A', fontFamily: 'var(--font-barlow)' }}>
                   {lead.empresa || '—'}
                 </td>
-                <td className="px-4 py-3 text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+                <td className="px-4 py-3 text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
                   {lead.email}
                 </td>
                 <td className="px-4 py-3">
@@ -106,10 +106,10 @@ export function LeadsTable({ leads }: { leads: LeadB2B[] }) {
                     <span style={{ color: '#C8C7C3' }}>—</span>
                   )}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+                <td className="px-4 py-3 whitespace-nowrap text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
                   {fmtDate(lead.created_at)}
                 </td>
-                <td className="px-4 py-3 text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+                <td className="px-4 py-3 text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
                   {lead.utm_source || '—'}
                 </td>
                 <td className="px-4 py-3">
@@ -118,7 +118,7 @@ export function LeadsTable({ leads }: { leads: LeadB2B[] }) {
                     style={{
                       backgroundColor: `${STATUS_COLORS[lead.status_atual] ?? '#8A8986'}18`,
                       color: STATUS_COLORS[lead.status_atual] ?? '#8A8986',
-                      fontFamily: 'var(--font-dm-sans)',
+                      fontFamily: 'var(--font-barlow)',
                     }}
                   >
                     {STATUS_LABELS[lead.status_atual] ?? lead.status_atual}
@@ -135,8 +135,8 @@ export function LeadsTable({ leads }: { leads: LeadB2B[] }) {
                           disabled={isUpdating || active}
                           className="px-2 py-0.5 rounded text-xs transition-all disabled:cursor-not-allowed"
                           style={{
-                            fontFamily: 'var(--font-dm-sans)',
-                            backgroundColor: active ? `${STATUS_COLORS[action.value]}18` : '#F5F4F2',
+                            fontFamily: 'var(--font-barlow)',
+                            backgroundColor: active ? `${STATUS_COLORS[action.value]}18` : '#F4F3F1',
                             color: active ? STATUS_COLORS[action.value] : '#8A8986',
                             border: `1px solid ${active ? STATUS_COLORS[action.value] : '#E8E7E4'}`,
                             opacity: isUpdating && !active ? 0.5 : 1,

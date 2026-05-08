@@ -106,13 +106,13 @@ export function AIInsight() {
   return (
     <div
       className="rounded-xl p-6 flex flex-col gap-5"
-      style={{ backgroundColor: '#0A0A0A', border: '1px solid #1A1A1A' }}
+      style={{ backgroundColor: '#0D0B0A', border: '1px solid #1A1A1A' }}
     >
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h3
           className="text-base font-bold"
-          style={{ fontFamily: 'var(--font-syne)', color: '#D4001F', letterSpacing: '0.01em' }}
+          style={{ fontFamily: 'var(--font-barlow-condensed)', color: '#FF5500', letterSpacing: '0.01em' }}
         >
           Análise do período
         </h3>
@@ -122,8 +122,8 @@ export function AIInsight() {
           className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-opacity hover:opacity-80 disabled:opacity-40"
           style={{
             backgroundColor: '#1A1A1A',
-            color: '#F5F4F2',
-            fontFamily: 'var(--font-dm-sans)',
+            color: '#F4F3F1',
+            fontFamily: 'var(--font-barlow)',
             border: '1px solid #2A2A2A',
             cursor: loading ? 'not-allowed' : 'pointer',
           }}
@@ -136,7 +136,7 @@ export function AIInsight() {
       {/* Body */}
       {loading ? (
         <div className="flex flex-col gap-3">
-          <p className="text-sm" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-sm" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
             Analisando dados<LoadingDots />
           </p>
           {[60, 80, 70].map((w, i) => (
@@ -148,7 +148,7 @@ export function AIInsight() {
           ))}
         </div>
       ) : error ? (
-        <p className="text-sm" style={{ color: '#EF4444', fontFamily: 'var(--font-dm-sans)' }}>
+        <p className="text-sm" style={{ color: '#EF4444', fontFamily: 'var(--font-barlow)' }}>
           {error}
         </p>
       ) : insight ? (
@@ -157,7 +157,7 @@ export function AIInsight() {
             <p
               key={i}
               className="text-sm leading-relaxed"
-              style={{ color: '#C8C7C3', fontFamily: 'var(--font-dm-sans)' }}
+              style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}
             >
               {para.trim()}
             </p>
@@ -165,7 +165,7 @@ export function AIInsight() {
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3 py-4">
-          <p className="text-sm text-center" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-sm text-center" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
             Clique em &ldquo;Atualizar análise&rdquo; para gerar o resumo executivo do período atual com IA.
           </p>
           <button
@@ -173,9 +173,9 @@ export function AIInsight() {
             disabled={loading}
             className="px-4 py-2 rounded-md text-sm font-medium transition-opacity hover:opacity-80 disabled:opacity-40"
             style={{
-              backgroundColor: '#D4001F',
+              backgroundColor: '#FF5500',
               color: '#FFFFFF',
-              fontFamily: 'var(--font-dm-sans)',
+              fontFamily: 'var(--font-barlow)',
               cursor: 'pointer',
             }}
           >
@@ -187,7 +187,7 @@ export function AIInsight() {
       {/* Footer */}
       {generatedAt && !loading && (
         <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: '#1A1A1A' }}>
-          <p className="text-xs" style={{ color: '#4A4A4A', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-xs" style={{ color: '#4A4A4A', fontFamily: 'var(--font-barlow)' }}>
             Atualizado em {fmtTimestamp(generatedAt)}
             {fromCache && ' · em cache'}
           </p>

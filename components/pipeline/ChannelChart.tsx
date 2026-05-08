@@ -9,7 +9,7 @@ type Props = { data: { channel: string; count: number }[] }
 export function ChannelChart({ data }: Props) {
   if (!data.length) {
     return (
-      <div className="h-40 flex items-center justify-center text-sm" style={{ color: '#C8C7C3', fontFamily: 'var(--font-dm-sans)' }}>
+      <div className="h-40 flex items-center justify-center text-sm" style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}>
         Sem dados no período
       </div>
     )
@@ -29,7 +29,7 @@ export function ChannelChart({ data }: Props) {
           type="category"
           dataKey="channel"
           width={88}
-          tick={{ fontSize: 11, fill: '#0A0A0A' }}
+          tick={{ fontSize: 11, fill: '#0D0B0A' }}
           axisLine={false}
           tickLine={false}
         />
@@ -37,7 +37,7 @@ export function ChannelChart({ data }: Props) {
           contentStyle={{ fontSize: 12, border: '1px solid #E8E7E4', borderRadius: 6 }}
           formatter={(v) => [v, 'Candidatos']}
         />
-        <Bar dataKey="count" fill="#D4001F" radius={[0, 3, 3, 0]} maxBarSize={22} />
+        <Bar dataKey="count" fill="#FF5500" radius={[0, 3, 3, 0]} maxBarSize={22} />
       </BarChart>
     </ResponsiveContainer>
   )

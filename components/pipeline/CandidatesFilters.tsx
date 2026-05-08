@@ -19,8 +19,8 @@ const sel: React.CSSProperties = {
   borderRadius: 6,
   padding: '6px 10px',
   fontSize: 13,
-  fontFamily: 'var(--font-dm-sans)',
-  color: '#0A0A0A',
+  fontFamily: 'var(--font-barlow)',
+  color: '#0D0B0A',
   outline: 'none',
   cursor: 'pointer',
 }

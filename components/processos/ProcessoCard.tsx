@@ -14,7 +14,7 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   novo: '#8A8986', contactado: '#3B82F6', video_enviado: '#8B5CF6',
   aprovado_triagem: '#10B981', reprovado: '#EF4444',
-  contratado: '#D4001F', descartado: '#6B7280',
+  contratado: '#FF5500', descartado: '#6B7280',
 }
 
 function fmtDate(d: string) {
@@ -30,11 +30,11 @@ function Counter({ label, value, alert }: { label: string; value: number; alert?
     <div className="text-center">
       <p
         className="text-2xl font-bold leading-none"
-        style={{ fontFamily: 'var(--font-syne)', color: alert && value > 0 ? '#F59E0B' : '#0A0A0A' }}
+        style={{ fontFamily: 'var(--font-barlow-condensed)', color: alert && value > 0 ? '#F59E0B' : '#0D0B0A' }}
       >
         {value}
       </p>
-      <p className="text-xs mt-1" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>{label}</p>
+      <p className="text-xs mt-1" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>{label}</p>
     </div>
   )
 }
@@ -58,7 +58,7 @@ export function ProcessoCard({
   const [encerring, setEncerring] = useState(false)
 
   const saude = processo.saude
-  const borderColor = saude.tipo === 'saudavel' ? '#10B981' : saude.tipo === 'atencao' ? '#F59E0B' : '#D4001F'
+  const borderColor = saude.tipo === 'saudavel' ? '#10B981' : saude.tipo === 'atencao' ? '#F59E0B' : '#FF5500'
   const badgeBg = saude.tipo === 'saudavel' ? '#D1FAE5' : saude.tipo === 'atencao' ? '#FEF3C7' : '#FEE2E2'
   const badgeColor = saude.tipo === 'saudavel' ? '#065F46' : saude.tipo === 'atencao' ? '#92400E' : '#991B1B'
   const badgeLabel =
@@ -106,23 +106,23 @@ export function ProcessoCard({
           <div className="flex-1 min-w-0">
             <h3
               className="font-bold text-base leading-tight truncate"
-              style={{ fontFamily: 'var(--font-syne)', color: '#0A0A0A' }}
+              style={{ fontFamily: 'var(--font-barlow-condensed)', color: '#0D0B0A' }}
             >
               {processo.empresa}
             </h3>
-            <p className="text-sm mt-0.5" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+            <p className="text-sm mt-0.5" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
               {processo.cargo}{processo.canalPrincipal ? ` · ${processo.canalPrincipal}` : ''}
             </p>
           </div>
           <span
             className="text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0"
-            style={{ backgroundColor: badgeBg, color: badgeColor, fontFamily: 'var(--font-dm-sans)' }}
+            style={{ backgroundColor: badgeBg, color: badgeColor, fontFamily: 'var(--font-barlow)' }}
           >
             {badgeLabel}
           </span>
         </div>
 
-        <div className="rounded-lg overflow-hidden mb-5" style={{ backgroundColor: '#F5F4F2' }}>
+        <div className="rounded-lg overflow-hidden mb-5" style={{ backgroundColor: '#F4F3F1' }}>
           <div className="grid grid-cols-3 gap-3 py-3">
             <Counter label="Candidatos" value={processo.totalCandidatos} />
             <Counter label="Parados" value={processo.parados} alert />
@@ -133,16 +133,16 @@ export function ProcessoCard({
               className="px-4 py-2 flex items-center gap-2 flex-wrap border-t"
               style={{ borderColor: '#E8E7E4' }}
             >
-              <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+              <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
                 Investido:{' '}
-                <span style={{ color: '#0A0A0A', fontWeight: 600 }}>
+                <span style={{ color: '#0D0B0A', fontWeight: 600 }}>
                   {fmtBRL(campanha.total_spend)}
                 </span>
               </span>
               <span style={{ color: '#E8E7E4' }}>·</span>
-              <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+              <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
                 CPL:{' '}
-                <span style={{ color: campanha.cpl_medio !== null ? '#D4001F' : '#0A0A0A', fontWeight: 600 }}>
+                <span style={{ color: campanha.cpl_medio !== null ? '#FF5500' : '#0D0B0A', fontWeight: 600 }}>
                   {campanha.cpl_medio !== null ? fmtBRL(campanha.cpl_medio) : '—'}
                 </span>
               </span>
@@ -154,16 +154,16 @@ export function ProcessoCard({
         <div className="flex flex-col gap-2">
           {processo.funil.map(etapa => (
             <div key={etapa.label} className="flex items-center gap-2">
-              <span className="text-xs shrink-0" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)', width: '5.5rem', textAlign: 'right' }}>
+              <span className="text-xs shrink-0" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)', width: '5.5rem', textAlign: 'right' }}>
                 {etapa.label}
               </span>
               <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: '#E8E7E4' }}>
                 <div
                   className="h-full rounded-full transition-all"
-                  style={{ width: `${max > 0 ? Math.round((etapa.count / max) * 100) : 0}%`, backgroundColor: '#0A0A0A' }}
+                  style={{ width: `${max > 0 ? Math.round((etapa.count / max) * 100) : 0}%`, backgroundColor: '#0D0B0A' }}
                 />
               </div>
-              <span className="text-xs w-5 text-right" style={{ color: '#0A0A0A', fontFamily: 'var(--font-dm-sans)' }}>
+              <span className="text-xs w-5 text-right" style={{ color: '#0D0B0A', fontFamily: 'var(--font-barlow)' }}>
                 {etapa.count}
               </span>
             </div>
@@ -171,10 +171,10 @@ export function ProcessoCard({
         </div>
 
         <div className="mt-4 flex items-center justify-between">
-          <p className="text-xs" style={{ color: '#C8C7C3', fontFamily: 'var(--font-dm-sans)' }}>
+          <p className="text-xs" style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}>
             {processo.ultimoCandidato ? `Último: ${fmtDate(processo.ultimoCandidato)}` : 'Sem candidatos'}
           </p>
-          <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+          <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
             {expanded ? '▲ Fechar' : '▼ Detalhes'}
           </span>
         </div>
@@ -185,13 +185,13 @@ export function ProcessoCard({
         <div className="border-t px-5 pb-5 pt-4 flex flex-col gap-5" style={{ borderColor: '#E8E7E4', backgroundColor: '#FAFAF9' }}>
           {/* Candidate list */}
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+            <h4 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
               Candidatos ({processo.candidatos.length})
             </h4>
             <div className="overflow-auto rounded-lg max-h-60" style={{ border: '1px solid #E8E7E4' }}>
               <table className="w-full text-xs min-w-[480px]">
                 <thead>
-                  <tr style={{ backgroundColor: '#F5F4F2', borderBottom: '1px solid #E8E7E4' }}>
+                  <tr style={{ backgroundColor: '#F4F3F1', borderBottom: '1px solid #E8E7E4' }}>
                     {['Nome', 'Entrada', 'Status', 'Dias s/ atualiz.', ''].map(c => (
                       <th key={c} className="text-left px-3 py-2 font-medium uppercase tracking-wider" style={{ color: '#8A8986' }}>
                         {c}
@@ -212,7 +212,7 @@ export function ProcessoCard({
                         backgroundColor: c.parado ? '#FFFBEB' : undefined,
                       }}
                     >
-                      <td className="px-3 py-2 font-medium" style={{ color: '#0A0A0A' }}>{c.fullname || '—'}</td>
+                      <td className="px-3 py-2 font-medium" style={{ color: '#0D0B0A' }}>{c.fullname || '—'}</td>
                       <td className="px-3 py-2 whitespace-nowrap" style={{ color: '#8A8986' }}>{fmtDate(c.created_at)}</td>
                       <td className="px-3 py-2">
                         <span
@@ -254,7 +254,7 @@ export function ProcessoCard({
           <div>
             <label
               className="block text-xs font-semibold uppercase tracking-wider mb-2"
-              style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}
+              style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}
             >
               Observações gerais
             </label>
@@ -266,19 +266,19 @@ export function ProcessoCard({
                   rows={3}
                   placeholder="Adicione observações sobre este processo..."
                   className="w-full text-sm rounded-lg px-3 py-2 resize-none outline-none"
-                  style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-dm-sans)', color: '#0A0A0A', backgroundColor: '#FFFFFF' }}
+                  style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-barlow)', color: '#0D0B0A', backgroundColor: '#FFFFFF' }}
                 />
                 <button
                   onClick={saveObs}
                   disabled={saving}
                   className="mt-2 px-4 py-1.5 rounded-md text-sm disabled:opacity-50"
-                  style={{ backgroundColor: '#0A0A0A', color: '#F5F4F2', fontFamily: 'var(--font-dm-sans)' }}
+                  style={{ backgroundColor: '#0D0B0A', color: '#F4F3F1', fontFamily: 'var(--font-barlow)' }}
                 >
                   {saving ? 'Salvando...' : 'Salvar observações'}
                 </button>
               </>
             ) : (
-              <p className="text-xs py-2" style={{ color: '#C8C7C3', fontFamily: 'var(--font-dm-sans)' }}>
+              <p className="text-xs py-2" style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}>
                 Crie um processo via &ldquo;+ Novo processo&rdquo; para habilitar observações e encerramento.
               </p>
             )}
@@ -291,7 +291,7 @@ export function ProcessoCard({
                 onClick={encerrar}
                 disabled={encerring}
                 className="px-4 py-2 rounded-md text-sm disabled:opacity-50 transition-opacity hover:opacity-80"
-                style={{ backgroundColor: '#FEE2E2', color: '#991B1B', fontFamily: 'var(--font-dm-sans)' }}
+                style={{ backgroundColor: '#FEE2E2', color: '#991B1B', fontFamily: 'var(--font-barlow)' }}
               >
                 {encerring ? 'Encerrando...' : 'Encerrar processo'}
               </button>

@@ -31,8 +31,8 @@ const inputStyle: React.CSSProperties = {
   borderRadius: 6,
   border: '1px solid #C8C7C3',
   fontSize: 14,
-  fontFamily: 'var(--font-dm-sans)',
-  color: '#0A0A0A',
+  fontFamily: 'var(--font-barlow)',
+  color: '#0D0B0A',
   backgroundColor: '#FFFFFF',
   outline: 'none',
 }
@@ -72,8 +72,8 @@ function ProgressBar({
   if (meta == null) {
     return (
       <div className="flex items-center justify-between">
-        <span className="text-sm" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>{label}</span>
-        <span className="text-xs" style={{ color: '#C8C7C3', fontFamily: 'var(--font-dm-sans)' }}>Meta não cadastrada</span>
+        <span className="text-sm" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>{label}</span>
+        <span className="text-xs" style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}>Meta não cadastrada</span>
       </div>
     )
   }
@@ -85,10 +85,10 @@ function ProgressBar({
   if (invertido) {
     // Lower realizado = better. Bar fills as CPL approaches 0 relative to meta.
     barPct  = meta > 0 ? Math.min(Math.round((meta / Math.max(r, 0.01)) * 100), 100) : 0
-    color   = r <= meta ? '#22c55e' : r <= meta * 1.5 ? '#f59e0b' : '#D4001F'
+    color   = r <= meta ? '#22c55e' : r <= meta * 1.5 ? '#f59e0b' : '#FF5500'
   } else {
     barPct = meta > 0 ? Math.min(Math.round((r / meta) * 100), 100) : 0
-    color  = barPct >= 80 ? '#22c55e' : barPct >= 50 ? '#f59e0b' : '#D4001F'
+    color  = barPct >= 80 ? '#22c55e' : barPct >= 50 ? '#f59e0b' : '#FF5500'
   }
 
   const pctLabel = invertido
@@ -98,10 +98,10 @@ function ProgressBar({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium" style={{ color: '#0A0A0A', fontFamily: 'var(--font-dm-sans)' }}>
+        <span className="text-sm font-medium" style={{ color: '#0D0B0A', fontFamily: 'var(--font-barlow)' }}>
           {label}
         </span>
-        <span className="text-xs text-right" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)', whiteSpace: 'nowrap' }}>
+        <span className="text-xs text-right" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)', whiteSpace: 'nowrap' }}>
           {prefix}{r}{suffix} / {prefix}{meta}{suffix} ({pctLabel})
         </span>
       </div>
@@ -195,7 +195,7 @@ export function MetasModule() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Form */}
         <div className="rounded-xl p-6 flex flex-col gap-4" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E7E4' }}>
-          <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-syne)', color: '#0A0A0A' }}>
+          <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-barlow-condensed)', color: '#0D0B0A' }}>
             Cadastrar metas
           </h3>
           {saveMsg && (
@@ -204,7 +204,7 @@ export function MetasModule() {
               style={{
                 backgroundColor: saveMsg.type === 'ok' ? '#D1FAE5' : '#FEE2E2',
                 color: saveMsg.type === 'ok' ? '#065F46' : '#991B1B',
-                fontFamily: 'var(--font-dm-sans)',
+                fontFamily: 'var(--font-barlow)',
               }}
             >
               {saveMsg.text}
@@ -213,7 +213,7 @@ export function MetasModule() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             {FIELDS.map(({ key, label, type, step }) => (
               <div key={key} className="flex flex-col gap-1">
-                <label className="text-xs font-medium uppercase tracking-wider" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+                <label className="text-xs font-medium uppercase tracking-wider" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
                   {label}
                 </label>
                 <input
@@ -231,7 +231,7 @@ export function MetasModule() {
               type="submit"
               disabled={saving || loading}
               className="mt-2 px-4 py-2 rounded-md text-sm font-medium disabled:opacity-60 transition-opacity hover:opacity-80"
-              style={{ backgroundColor: '#0A0A0A', color: '#F5F4F2', fontFamily: 'var(--font-dm-sans)' }}
+              style={{ backgroundColor: '#0D0B0A', color: '#F4F3F1', fontFamily: 'var(--font-barlow)' }}
             >
               {saving ? 'Salvando...' : 'Salvar metas'}
             </button>
@@ -240,13 +240,13 @@ export function MetasModule() {
 
         {/* Progress bars */}
         <div className="rounded-xl p-6 flex flex-col gap-5" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E7E4' }}>
-          <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-syne)', color: '#0A0A0A' }}>
+          <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-barlow-condensed)', color: '#0D0B0A' }}>
             Progresso
           </h3>
           {loading ? (
             <div className="flex flex-col gap-4">
               {[0, 1, 2, 3, 4].map(i => (
-                <div key={i} className="h-8 rounded animate-pulse" style={{ backgroundColor: '#F5F4F2' }} />
+                <div key={i} className="h-8 rounded animate-pulse" style={{ backgroundColor: '#F4F3F1' }} />
               ))}
             </div>
           ) : (
@@ -275,10 +275,10 @@ export function MetasModule() {
               />
               {data?.metas?.verba_investida != null && (
                 <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: '#E8E7E4' }}>
-                  <span className="text-sm" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+                  <span className="text-sm" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
                     Verba alocada
                   </span>
-                  <span className="text-sm font-semibold" style={{ color: '#0A0A0A', fontFamily: 'var(--font-dm-sans)' }}>
+                  <span className="text-sm font-semibold" style={{ color: '#0D0B0A', fontFamily: 'var(--font-barlow)' }}>
                     R$ {Number(data.metas.verba_investida).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>

@@ -19,7 +19,7 @@ const STATUS_COLORS: Record<string, string> = {
   video_enviado: '#8B5CF6',
   aprovado_triagem: '#10B981',
   reprovado: '#EF4444',
-  contratado: '#D4001F',
+  contratado: '#FF5500',
   descartado: '#6B7280',
 }
 
@@ -51,7 +51,7 @@ export async function CandidatesTable({ period, page, pageSize, cargo, empresa, 
     ])
   } catch {
     return (
-      <p className="text-sm text-center py-4" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+      <p className="text-sm text-center py-4" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
         Erro ao carregar candidatos. Tente novamente.
       </p>
     )
@@ -62,7 +62,7 @@ export async function CandidatesTable({ period, page, pageSize, cargo, empresa, 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-dm-sans)', color: '#0A0A0A' }}>
+        <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-barlow)', color: '#0D0B0A' }}>
           {total.toLocaleString('pt-BR')} candidato{total !== 1 ? 's' : ''}
         </p>
         <Suspense fallback={null}>
@@ -73,12 +73,12 @@ export async function CandidatesTable({ period, page, pageSize, cargo, empresa, 
       <div className="overflow-x-auto rounded-lg" style={{ border: '1px solid #E8E7E4' }}>
         <table className="w-full text-sm min-w-[640px]">
           <thead>
-            <tr style={{ backgroundColor: '#F5F4F2', borderBottom: '1px solid #E8E7E4' }}>
+            <tr style={{ backgroundColor: '#F4F3F1', borderBottom: '1px solid #E8E7E4' }}>
               {['Nome', 'Cargo', 'Empresa', 'Data', 'Canal', 'Status', ''].map(col => (
                 <th
                   key={col}
                   className="text-left px-4 py-3 text-xs uppercase tracking-wider font-medium"
-                  style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}
+                  style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}
                 >
                   {col}
                 </th>
@@ -91,7 +91,7 @@ export async function CandidatesTable({ period, page, pageSize, cargo, empresa, 
                 <td
                   colSpan={7}
                   className="text-center py-10 text-sm"
-                  style={{ color: '#C8C7C3', fontFamily: 'var(--font-dm-sans)' }}
+                  style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}
                 >
                   Nenhum candidato encontrado
                 </td>
@@ -103,19 +103,19 @@ export async function CandidatesTable({ period, page, pageSize, cargo, empresa, 
                   className="transition-colors hover:bg-gray-50"
                   style={{ borderBottom: '1px solid #F0EFED' }}
                 >
-                  <td className="px-4 py-3 font-medium" style={{ fontFamily: 'var(--font-dm-sans)', color: '#0A0A0A' }}>
+                  <td className="px-4 py-3 font-medium" style={{ fontFamily: 'var(--font-barlow)', color: '#0D0B0A' }}>
                     {c.fullname || '—'}
                   </td>
-                  <td className="px-4 py-3" style={{ color: '#4A4A4A', fontFamily: 'var(--font-dm-sans)' }}>
+                  <td className="px-4 py-3" style={{ color: '#4A4A4A', fontFamily: 'var(--font-barlow)' }}>
                     {c.cargo || '—'}
                   </td>
-                  <td className="px-4 py-3" style={{ color: '#4A4A4A', fontFamily: 'var(--font-dm-sans)' }}>
+                  <td className="px-4 py-3" style={{ color: '#4A4A4A', fontFamily: 'var(--font-barlow)' }}>
                     {c.empresa || '—'}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
                     {fmtDate(c.created_at)}
                   </td>
-                  <td className="px-4 py-3" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+                  <td className="px-4 py-3" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
                     {c.utm_source || '—'}
                   </td>
                   <td className="px-4 py-3">
@@ -124,7 +124,7 @@ export async function CandidatesTable({ period, page, pageSize, cargo, empresa, 
                       style={{
                         backgroundColor: `${STATUS_COLORS[c.status_atual] ?? '#8A8986'}18`,
                         color: STATUS_COLORS[c.status_atual] ?? '#8A8986',
-                        fontFamily: 'var(--font-dm-sans)',
+                        fontFamily: 'var(--font-barlow)',
                       }}
                     >
                       {STATUS_LABELS[c.status_atual] ?? c.status_atual}

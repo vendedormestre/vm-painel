@@ -9,9 +9,9 @@ const btn: React.CSSProperties = {
   borderRadius: 6,
   padding: '4px 12px',
   fontSize: 12,
-  fontFamily: 'var(--font-dm-sans)',
+  fontFamily: 'var(--font-barlow)',
   backgroundColor: '#FFFFFF',
-  color: '#0A0A0A',
+  color: '#0D0B0A',
   cursor: 'pointer',
 }
 
@@ -21,8 +21,8 @@ const sel: React.CSSProperties = {
   borderRadius: 6,
   padding: '4px 8px',
   fontSize: 12,
-  fontFamily: 'var(--font-dm-sans)',
-  color: '#0A0A0A',
+  fontFamily: 'var(--font-barlow)',
+  color: '#0D0B0A',
   cursor: 'pointer',
   outline: 'none',
 }
@@ -47,11 +47,11 @@ export function PaginationControls({ page, pages, total, pageSize }: Props) {
       style={{ borderColor: '#E8E7E4', backgroundColor: '#FAFAF9', borderRadius: '0 0 8px 8px' }}
     >
       <div className="flex items-center gap-3">
-        <p className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+        <p className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
           Página {page} de {pages} · {total.toLocaleString('pt-BR')} total
         </p>
         <div className="flex items-center gap-1.5">
-          <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>por página:</span>
+          <span className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>por página:</span>
           <select
             value={pageSize}
             onChange={e => goTo(1, Number(e.target.value))}

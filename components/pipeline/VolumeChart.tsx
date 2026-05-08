@@ -15,7 +15,7 @@ function fmt(d: string) {
 export function VolumeChart({ data }: Props) {
   if (!data.length) {
     return (
-      <div className="h-48 flex items-center justify-center text-sm" style={{ color: '#C8C7C3', fontFamily: 'var(--font-dm-sans)' }}>
+      <div className="h-48 flex items-center justify-center text-sm" style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}>
         Sem dados no período
       </div>
     )
@@ -43,7 +43,7 @@ export function VolumeChart({ data }: Props) {
           formatter={(v) => [v, 'Candidatos']}
           labelFormatter={(label: unknown) => fmt(String(label))}
         />
-        <Bar dataKey="count" fill="#D4001F" radius={[3, 3, 0, 0]} maxBarSize={40} />
+        <Bar dataKey="count" fill="#FF5500" radius={[3, 3, 0, 0]} maxBarSize={40} />
       </BarChart>
     </ResponsiveContainer>
   )

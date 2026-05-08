@@ -17,7 +17,7 @@ export default function LogoutButton() {
       style={{
         backgroundColor: '#1A1A1A',
         color: '#C8C7C3',
-        fontFamily: 'DM Sans, sans-serif',
+        fontFamily: 'Barlow, sans-serif',
         border: '1px solid #2A2A2A',
       }}
     >

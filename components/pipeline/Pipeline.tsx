@@ -9,7 +9,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
     <div className="rounded-xl p-6" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E7E4' }}>
       <h2
         className="text-base mb-6"
-        style={{ fontFamily: 'var(--font-syne)', fontWeight: 700, color: '#0A0A0A' }}
+        style={{ fontFamily: 'var(--font-barlow-condensed)', fontWeight: 700, color: '#0D0B0A' }}
       >
         {title}
       </h2>
@@ -38,7 +38,7 @@ export async function Pipeline({ period, page, pageSize, cargo, empresa, status 
     ])
   } catch {
     return (
-      <p className="text-sm text-center py-4" style={{ color: '#8A8986', fontFamily: 'var(--font-dm-sans)' }}>
+      <p className="text-sm text-center py-4" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
         Erro ao carregar o pipeline. Tente novamente.
       </p>
     )

@@ -29,10 +29,10 @@ export function ProcessosPeriodFilter({ current }: { current: string }) {
             onClick={() => set(o.value)}
             className="px-3 py-1.5 rounded-md text-xs transition-all"
             style={{
-              backgroundColor: active ? '#0A0A0A' : '#FFFFFF',
-              color: active ? '#F5F4F2' : '#8A8986',
-              border: `1px solid ${active ? '#0A0A0A' : '#C8C7C3'}`,
-              fontFamily: 'var(--font-dm-sans)',
+              backgroundColor: active ? '#0D0B0A' : '#FFFFFF',
+              color: active ? '#F4F3F1' : '#8A8986',
+              border: `1px solid ${active ? '#0D0B0A' : '#C8C7C3'}`,
+              fontFamily: 'var(--font-barlow)',
             }}
           >
             {o.label}
