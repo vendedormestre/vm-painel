@@ -40,32 +40,23 @@ export async function KpiBar({ period }: { period: Period }) {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <KpiCard
         label="Total de candidatos"
         value={data.totalCandidatos.toLocaleString('pt-BR')}
       />
       <KpiCard
-        label="Total de leads B2B"
-        value={data.totalLeads.toLocaleString('pt-BR')}
-      />
-      <KpiCard
-        label="Taxa de contato"
-        value={`${data.taxaContato}%`}
+        label="Vídeos enviados"
+        value={data.videosEnviados.toLocaleString('pt-BR')}
       />
       <KpiCard
         label="Contratações confirmadas"
         value={data.contratados.toLocaleString('pt-BR')}
       />
       <KpiCard
-        label="CPL realizado"
+        label="CPL"
         value={data.cpl ?? '—'}
-        sub={data.cpl ? 'spend ÷ leads (campanhas)' : 'Sem dados de campanhas'}
-      />
-      <KpiCard
-        label="Custo por contratação"
-        value={data.custoContratacao ?? '—'}
-        sub={data.custoContratacao ? 'verba ÷ contratações' : 'Sem dados suficientes'}
+        sub={data.cpl ? undefined : data.cplSub}
       />
     </div>
   )

@@ -32,42 +32,35 @@ export function getPeriodDates(period: Period) {
 
 export async function getKpiData(period: Period) {
   const supabase = createAdminClient()
-  const { start, end, monthPeriod } = getPeriodDates(period)
+  const { start, end } = getPeriodDates(period)
   const dateFrom = start.split('T')[0]
   const dateTo   = end.split('T')[0]
 
-  const [candidatosRes, leadsRes, feedbackRes, metaRes, campanhasRes] = await Promise.all([
+  const [candidatosRes, videosRes, feedbackRes, metaReportsRes] = await Promise.all([
     supabase.from('aplicacao').select('*', { count: 'exact', head: true }).gte('created_at', start).lte('created_at', end),
-    supabase.from('leads').select('*', { count: 'exact', head: true }).gte('created_at', start).lte('created_at', end),
+    supabase.from('aplicacao').select('*', { count: 'exact', head: true })
+      .gte('created_at', start).lte('created_at', end)
+      .not('link_video', 'is', null).neq('link_video', ''),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).schema('dashboard').from('feedback_candidatos').select('status'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase as any).schema('dashboard').from('metas').select('verba_investida').eq('periodo', monthPeriod).maybeSingle(),
-    supabase.from('campanhas_investimento').select('spend, leads').gte('date', dateFrom).lte('date', dateTo),
+    (supabase as any).schema('dashboard').from('meta_reports').select('verba_gasta').gte('data_relatorio', dateFrom).lte('data_relatorio', dateTo),
   ])
 
   const totalCandidatos = candidatosRes.count ?? 0
-  const totalLeads = leadsRes.count ?? 0
+  const videosEnviados = videosRes.count ?? 0
   const feedbacks: { status: string }[] = feedbackRes.data ?? []
-  const verba: number | null = metaRes.data?.verba_investida ?? null
-
-  const contactadosOuSuperior = feedbacks.filter(f =>
-    ['contactado', 'video_enviado', 'aprovado_triagem', 'contratado'].includes(f.status)
-  ).length
   const contratados = feedbacks.filter(f => f.status === 'contratado').length
-  const taxaContato = totalCandidatos > 0 ? Math.round((contactadosOuSuperior / totalCandidatos) * 100) : 0
 
   const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-  // CPL Realizado: SUM(spend) / SUM(leads) from campanhas_investimento
-  const campanhas = (campanhasRes.data ?? []) as { spend: number | null; leads: number | null }[]
-  const totalSpend = campanhas.reduce((s, r) => s + (Number(r.spend) || 0), 0)
-  const totalLeadsCamp = campanhas.reduce((s, r) => s + (Number(r.leads) || 0), 0)
-  const cpl = totalLeadsCamp > 0 && totalSpend > 0 ? fmt(totalSpend / totalLeadsCamp) : null
+  const metaReports = (metaReportsRes.data ?? []) as { verba_gasta: number | null }[]
+  const hasMetaData = metaReports.length > 0
+  const totalVerba = metaReports.reduce((s, r) => s + (Number(r.verba_gasta) || 0), 0)
+  const cpl = hasMetaData && totalCandidatos > 0 ? fmt(totalVerba / totalCandidatos) : null
+  const cplSub = !hasMetaData ? 'Sem dados de campanha' : undefined
 
-  const custoContratacao = verba && contratados > 0 ? fmt(verba / contratados) : null
-
-  return { totalCandidatos, totalLeads, taxaContato, contratados, cpl, custoContratacao }
+  return { totalCandidatos, videosEnviados, contratados, cpl, cplSub }
 }
 
 export async function getDailyVolume(period: Period) {
