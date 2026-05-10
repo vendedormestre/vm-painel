@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ProcessoData } from '@/lib/processos'
 
 type CampanhaMetrics = { total_spend: number; total_leads: number; cpl_medio: number | null }
 type FinanceiroMetrics = { total_investido: number }
+type LookupData = { id: string | null; campanha_meta: string | null; observacoes: string | null }
 
 const STATUS_LABELS: Record<string, string> = {
   novo: 'Novo', contactado: 'Contactado', video_enviado: 'Vídeo enviado',
@@ -56,11 +57,37 @@ export function ProcessoCard({
   onRefresh?: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
+
+  // Lookup fetches the real DB record by cargo+empresa when the card expands.
+  // This is needed because processo.id may be null when the RPC function in the
+  // database hasn't been updated yet to return the joined id.
+  const [lookup, setLookup] = useState<LookupData | null>(null)
+  const [lookupDone, setLookupDone] = useState(false)
+
   const [obs, setObs] = useState(processo.observacoes ?? '')
   const [campanhaMeta, setCampanhaMeta] = useState(processo.campanha_meta ?? '')
   const [saving, setSaving] = useState(false)
   const [savingCampanha, setSavingCampanha] = useState(false)
   const [encerring, setEncerring] = useState(false)
+
+  useEffect(() => {
+    if (!expanded || lookupDone) return
+    setLookupDone(true)
+    fetch(`/api/processos/lookup?cargo=${encodeURIComponent(processo.cargo)}&empresa=${encodeURIComponent(processo.empresa)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then((d: LookupData | null) => {
+        if (d) {
+          setLookup(d)
+          // Seed editable fields with DB values if not already set from RPC
+          if (!processo.campanha_meta && d.campanha_meta) setCampanhaMeta(d.campanha_meta)
+          if (!processo.observacoes && d.observacoes) setObs(d.observacoes)
+        }
+      })
+      .catch(() => {})
+  }, [expanded, lookupDone, processo.cargo, processo.empresa, processo.campanha_meta, processo.observacoes])
+
+  // Effective id: prefer RPC value, fall back to lookup
+  const effectiveId = processo.id ?? lookup?.id ?? null
 
   const saude = processo.saude
   const borderColor = saude.tipo === 'saudavel' ? '#10B981' : saude.tipo === 'atencao' ? '#F59E0B' : '#FF5500'
@@ -73,12 +100,13 @@ export function ProcessoCard({
 
   const max = processo.funil[0].count || 1
 
-  const hasId = processo.id !== null
+  // For financial metrics, use campanha_meta from lookup if RPC didn't return it
+  const resolvedCampanhaMeta = processo.campanha_meta ?? lookup?.campanha_meta ?? null
 
   async function saveObs() {
-    if (!hasId) return
+    if (!effectiveId) return
     setSaving(true)
-    await fetch(`/api/processos/${processo.id}`, {
+    await fetch(`/api/processos/${effectiveId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ observacoes: obs }),
@@ -88,9 +116,9 @@ export function ProcessoCard({
   }
 
   async function saveCampanhaMeta() {
-    if (!hasId) return
+    if (!effectiveId) return
     setSavingCampanha(true)
-    await fetch(`/api/processos/${processo.id}`, {
+    await fetch(`/api/processos/${effectiveId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ campanha_meta: campanhaMeta || null }),
@@ -100,10 +128,10 @@ export function ProcessoCard({
   }
 
   async function encerrar() {
-    if (!hasId) return
+    if (!effectiveId) return
     if (!confirm(`Encerrar o processo "${processo.cargo}" em ${processo.empresa}?`)) return
     setEncerring(true)
-    await fetch(`/api/processos/${processo.id}`, {
+    await fetch(`/api/processos/${effectiveId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: 'encerrado', data_encerramento: new Date().toISOString() }),
@@ -190,7 +218,7 @@ export function ProcessoCard({
         {/* Métricas financeiras — sempre visíveis */}
         {(() => {
           const inv = financeiro?.total_investido ?? 0
-          const hasMeta = !!processo.campanha_meta
+          const hasMeta = !!resolvedCampanhaMeta
           const cols = [
             {
               label: 'Investido',
@@ -224,7 +252,7 @@ export function ProcessoCard({
                   className="text-center text-xs py-1.5 border-t"
                   style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)', borderColor: '#E8E7E4' }}
                 >
-                  Configure a campanha em Detalhes
+                  Configure em Detalhes
                 </p>
               )}
             </div>
@@ -319,35 +347,28 @@ export function ProcessoCard({
             >
               Campanha Meta
             </label>
-            {hasId ? (
-              <>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={campanhaMeta}
-                    onChange={e => setCampanhaMeta(e.target.value)}
-                    placeholder="Ex: Sua Estética Dental"
-                    className="flex-1 text-sm rounded-lg px-3 py-2 outline-none"
-                    style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-barlow)', color: '#0D0B0A', backgroundColor: '#FFFFFF' }}
-                  />
-                  <button
-                    onClick={saveCampanhaMeta}
-                    disabled={savingCampanha}
-                    className="px-4 py-1.5 rounded-md text-sm disabled:opacity-50 whitespace-nowrap"
-                    style={{ backgroundColor: '#0D0B0A', color: '#F4F3F1', fontFamily: 'var(--font-barlow)' }}
-                  >
-                    {savingCampanha ? 'Salvando...' : 'Salvar'}
-                  </button>
-                </div>
-                <p className="mt-1.5 text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
-                  Digite o trecho do nome da campanha no Meta Ads para calcular CPL e investimento
-                </p>
-              </>
-            ) : (
-              <p className="text-xs py-2" style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}>
-                Crie um processo via &ldquo;+ Novo processo&rdquo; para habilitar este campo.
-              </p>
-            )}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={campanhaMeta}
+                onChange={e => setCampanhaMeta(e.target.value)}
+                placeholder="Ex: Sua Estética Dental"
+                disabled={!effectiveId}
+                className="flex-1 text-sm rounded-lg px-3 py-2 outline-none disabled:opacity-60"
+                style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-barlow)', color: '#0D0B0A', backgroundColor: '#FFFFFF' }}
+              />
+              <button
+                onClick={saveCampanhaMeta}
+                disabled={savingCampanha || !effectiveId}
+                className="px-4 py-1.5 rounded-md text-sm disabled:opacity-50 whitespace-nowrap"
+                style={{ backgroundColor: '#0D0B0A', color: '#F4F3F1', fontFamily: 'var(--font-barlow)' }}
+              >
+                {savingCampanha ? 'Salvando...' : 'Salvar'}
+              </button>
+            </div>
+            <p className="mt-1.5 text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
+              Trecho do nome da campanha no Meta Ads
+            </p>
           </div>
 
           {/* Observations */}
@@ -358,34 +379,27 @@ export function ProcessoCard({
             >
               Observações gerais
             </label>
-            {hasId ? (
-              <>
-                <textarea
-                  value={obs}
-                  onChange={e => setObs(e.target.value)}
-                  rows={3}
-                  placeholder="Adicione observações sobre este processo..."
-                  className="w-full text-sm rounded-lg px-3 py-2 resize-none outline-none"
-                  style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-barlow)', color: '#0D0B0A', backgroundColor: '#FFFFFF' }}
-                />
-                <button
-                  onClick={saveObs}
-                  disabled={saving}
-                  className="mt-2 px-4 py-1.5 rounded-md text-sm disabled:opacity-50"
-                  style={{ backgroundColor: '#0D0B0A', color: '#F4F3F1', fontFamily: 'var(--font-barlow)' }}
-                >
-                  {saving ? 'Salvando...' : 'Salvar observações'}
-                </button>
-              </>
-            ) : (
-              <p className="text-xs py-2" style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}>
-                Crie um processo via &ldquo;+ Novo processo&rdquo; para habilitar observações e encerramento.
-              </p>
-            )}
+            <textarea
+              value={obs}
+              onChange={e => setObs(e.target.value)}
+              rows={3}
+              disabled={!effectiveId}
+              placeholder="Adicione observações sobre este processo..."
+              className="w-full text-sm rounded-lg px-3 py-2 resize-none outline-none disabled:opacity-60"
+              style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-barlow)', color: '#0D0B0A', backgroundColor: '#FFFFFF' }}
+            />
+            <button
+              onClick={saveObs}
+              disabled={saving || !effectiveId}
+              className="mt-2 px-4 py-1.5 rounded-md text-sm disabled:opacity-50"
+              style={{ backgroundColor: '#0D0B0A', color: '#F4F3F1', fontFamily: 'var(--font-barlow)' }}
+            >
+              {saving ? 'Salvando...' : 'Salvar observações'}
+            </button>
           </div>
 
-          {/* Encerrar — only for processes with a real DB record */}
-          {hasId && (
+          {/* Encerrar */}
+          {effectiveId && (
             <div className="flex justify-end pt-2 border-t" style={{ borderColor: '#E8E7E4' }}>
               <button
                 onClick={encerrar}
