@@ -212,7 +212,7 @@ export function FilaFeedback() {
   useEffect(() => {
     fetch('/api/feedback/candidatos')
       .then(r => r.json())
-      .then(d => { setQueue(d); setLoading(false) })
+      .then(d => { setQueue(Array.isArray(d) ? d : []); setLoading(false) })
       .catch(e => { setError(e.message); setLoading(false) })
   }, [])
 

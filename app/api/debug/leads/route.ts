@@ -1,13 +1,7 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase'
 
 export async function GET() {
-  const store = await cookies()
-  if (store.get('vm_session')?.value !== 'authenticated') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
   const supabase = createAdminClient()
 
   // 1. Total count — no filters

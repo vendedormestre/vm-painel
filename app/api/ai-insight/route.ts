@@ -1,12 +1,6 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase'
 import OpenAI from 'openai'
-
-async function auth() {
-  const store = await cookies()
-  return store.get('vm_session')?.value === 'authenticated'
-}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const adminDb = () => createAdminClient() as any
@@ -18,8 +12,6 @@ function utcMonthRange(year: number, month: number) {
 }
 
 export async function GET() {
-  if (!(await auth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const key = process.env.OPENAI_API_KEY
   if (!key) return NextResponse.json({ error: 'OPENAI_API_KEY não configurada' }, { status: 500 })
 

@@ -1,21 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase'
 import { getProcessosAtivos, ProcessosPeriod } from '@/lib/processos'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const adminDb = () => createAdminClient() as any
 
-async function auth() {
-  const store = await cookies()
-  return store.get('vm_session')?.value === 'authenticated'
-}
-
 const VALID_PP: ProcessosPeriod[] = ['mes', '3m', 'all']
 
 export async function GET(request: NextRequest) {
-  if (!(await auth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const raw = request.nextUrl.searchParams.get('pp') ?? '3m'
   const pp = VALID_PP.includes(raw as ProcessosPeriod) ? (raw as ProcessosPeriod) : '3m'
 
@@ -29,8 +21,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await auth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { cargo, empresa, vagas_abertas, meta_contratacoes } = await request.json()
 
   if (!cargo || !empresa) {

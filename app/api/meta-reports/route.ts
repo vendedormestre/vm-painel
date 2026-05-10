@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase'
 
-async function auth() {
-  const store = await cookies()
-  return store.get('vm_session')?.value === 'authenticated'
-}
-
 export async function GET(request: NextRequest) {
-  if (!(await auth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { searchParams } = request.nextUrl
   const campanha_nome = searchParams.get('campanha_nome') // exact match; omit to sum all
 

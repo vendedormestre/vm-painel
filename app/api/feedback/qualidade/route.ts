@@ -1,11 +1,5 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase'
-
-async function auth() {
-  const store = await cookies()
-  return store.get('vm_session')?.value === 'authenticated'
-}
 
 export type CanalQualidade = {
   canal: string
@@ -18,8 +12,6 @@ export type CanalQualidade = {
 }
 
 export async function GET() {
-  if (!(await auth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const supabase = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any

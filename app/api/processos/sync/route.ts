@@ -1,18 +1,10 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const adminDb = () => createAdminClient() as any
 
-async function auth() {
-  const store = await cookies()
-  return store.get('vm_session')?.value === 'authenticated'
-}
-
 export async function POST() {
-  if (!(await auth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const supabase = createAdminClient()
 
   // Fetch all non-null cargo+empresa pairs from public.aplicacao

@@ -1,15 +1,7 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase'
 
-async function auth() {
-  const store = await cookies()
-  return store.get('vm_session')?.value === 'authenticated'
-}
-
 export async function GET() {
-  if (!(await auth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (createAdminClient() as any)
     .schema('dashboard')

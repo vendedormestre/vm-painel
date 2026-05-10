@@ -124,7 +124,7 @@ export function ProcessosGrid() {
       const res = await fetch(`/api/processos?pp=${pp}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data: ProcessoData[] = await res.json()
-      setProcessos(data)
+      setProcessos(Array.isArray(data) ? data : [])
       fetchCampanhas(data)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro desconhecido')

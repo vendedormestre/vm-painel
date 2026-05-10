@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase'
-
-async function auth() {
-  const store = await cookies()
-  return store.get('vm_session')?.value === 'authenticated'
-}
 
 function parsePeriodo(raw: string): { periodoDate: string; start: string; end: string } | null {
   if (!/^\d{4}-\d{2}$/.test(raw)) return null
@@ -16,8 +10,6 @@ function parsePeriodo(raw: string): { periodoDate: string; start: string; end: s
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await auth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const now = new Date()
   const rawPeriodo = request.nextUrl.searchParams.get('periodo') ??
     `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`
@@ -55,8 +47,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await auth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const body = await request.json()
   const { periodo, meta_candidatos, meta_contratacoes, meta_leads, verba_investida, meta_cpl } = body
 
