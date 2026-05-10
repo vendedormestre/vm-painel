@@ -11,6 +11,7 @@ const VALID_PP: ProcessosPeriod[] = ['mes', '3m', 'all']
 
 type CampanhaMetrics = { total_spend: number; total_leads: number; cpl_medio: number | null; matched_rows: number }
 type CampanhaMap = Record<string, CampanhaMetrics> // key: `${empresa}|${cargo}`
+type FinanceiroMetrics = { total_investido: number }
 
 function getPeriodDates(period: string): { from: string; to: string } {
   const now = new Date()
@@ -64,6 +65,8 @@ export function ProcessosGrid() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [campanhas, setCampanhas] = useState<CampanhaMap>({})
+  const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const [financeiro, setFinanceiro] = useState<FinanceiroMetrics | null>(null)
 
   const fetchCampanhas = useCallback(async (list: ProcessoData[]) => {
     if (list.length === 0) return
@@ -110,10 +113,24 @@ export function ProcessosGrid() {
     fetchProcessos()
   }, [fetchProcessos])
 
+  useEffect(() => {
+    if (!selectedKey) { setFinanceiro(null); return }
+    const empresa = selectedKey.split('|')[0]
+    fetch(`/api/meta-reports?empresa=${encodeURIComponent(empresa)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => setFinanceiro(d))
+      .catch(() => setFinanceiro(null))
+  }, [selectedKey])
+
+  // Filter by selected process
+  const displayProcessos = selectedKey
+    ? processos.filter(p => `${p.empresa}|${p.cargo}` === selectedKey)
+    : processos
+
   // Group by empresa, preserving sort order
   const empresaOrder: string[] = []
   const byEmpresa: Record<string, ProcessoData[]> = {}
-  processos.forEach(p => {
+  displayProcessos.forEach(p => {
     if (!byEmpresa[p.empresa]) {
       byEmpresa[p.empresa] = []
       empresaOrder.push(p.empresa)
@@ -132,6 +149,30 @@ export function ProcessosGrid() {
             : `${processos.length} grupo${processos.length !== 1 ? 's' : ''} · ${empresaOrder.length} empresa${empresaOrder.length !== 1 ? 's' : ''}`}
         </p>
         <div className="flex items-center gap-3 flex-wrap">
+          {!loading && processos.length > 0 && (
+            <select
+              value={selectedKey ?? ''}
+              onChange={e => setSelectedKey(e.target.value || null)}
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #C8C7C3',
+                borderRadius: 6,
+                padding: '4px 8px',
+                fontSize: 12,
+                fontFamily: 'var(--font-barlow)',
+                color: '#0D0B0A',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              <option value="">Todos os processos</option>
+              {processos.map(p => (
+                <option key={`${p.empresa}|${p.cargo}`} value={`${p.empresa}|${p.cargo}`}>
+                  {p.cargo} — {p.empresa}
+                </option>
+              ))}
+            </select>
+          )}
           <ProcessosPeriodFilter current={pp} />
           <NovoProcessoModal onCreated={fetchProcessos} />
         </div>
@@ -177,6 +218,7 @@ export function ProcessosGrid() {
                     key={`${p.empresa}|${p.cargo}`}
                     processo={p}
                     campanha={campanhas[`${p.empresa}|${p.cargo}`] ?? null}
+                    financeiro={selectedKey === `${p.empresa}|${p.cargo}` ? financeiro : null}
                     onRefresh={fetchProcessos}
                   />
                 ))}

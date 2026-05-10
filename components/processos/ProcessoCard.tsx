@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { ProcessoData } from '@/lib/processos'
 
 type CampanhaMetrics = { total_spend: number; total_leads: number; cpl_medio: number | null }
+type FinanceiroMetrics = { total_investido: number }
 
 const STATUS_LABELS: Record<string, string> = {
   novo: 'Novo', contactado: 'Contactado', video_enviado: 'Vídeo enviado',
@@ -46,10 +47,12 @@ function fmtBRL(v: number) {
 export function ProcessoCard({
   processo,
   campanha = null,
+  financeiro = null,
   onRefresh,
 }: {
   processo: ProcessoData
   campanha?: CampanhaMetrics | null
+  financeiro?: FinanceiroMetrics | null
   onRefresh?: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
@@ -169,6 +172,42 @@ export function ProcessoCard({
             </div>
           ))}
         </div>
+
+        {/* Métricas financeiras — exibidas apenas quando processo selecionado no filtro */}
+        {financeiro !== null && financeiro !== undefined && (
+          <div
+            className="mt-4 rounded-lg grid grid-cols-3 divide-x overflow-hidden"
+            style={{ border: '1px solid #E8E7E4' }}
+          >
+            {[
+              {
+                label: 'Investido',
+                value: financeiro.total_investido > 0 ? fmtBRL(financeiro.total_investido) : '—',
+              },
+              {
+                label: 'CPL',
+                value:
+                  financeiro.total_investido > 0 && processo.totalCandidatos > 0
+                    ? fmtBRL(financeiro.total_investido / processo.totalCandidatos)
+                    : '—',
+              },
+              {
+                label: 'Custo/Contratação',
+                value:
+                  financeiro.total_investido > 0 && processo.contratados > 0
+                    ? fmtBRL(financeiro.total_investido / processo.contratados)
+                    : '—',
+              },
+            ].map(({ label, value }) => (
+              <div key={label} className="text-center px-3 py-3" style={{ backgroundColor: '#FFFFFF' }}>
+                <p className="text-xs mb-1" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>{label}</p>
+                <p className="font-bold text-sm leading-none" style={{ color: '#FF5500', fontFamily: 'var(--font-barlow-condensed)' }}>
+                  {value}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="mt-4 flex items-center justify-between">
           <p className="text-xs" style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}>

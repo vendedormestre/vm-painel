@@ -68,8 +68,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const params = await searchParams
   const period = (VALID_PERIODS.includes(params.period ?? '') ? params.period : 'mes') as Period
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1)
-  const psRaw = parseInt(params.ps ?? '20', 10)
-  const pageSize = VALID_PS.includes(psRaw) ? psRaw : 20
+  const psRaw = parseInt(params.ps ?? '10', 10)
+  const pageSize = VALID_PS.includes(psRaw) ? psRaw : 10
   const lp = (VALID_PP.includes(params.lp as ProcessosPeriod) ? params.lp : 'all') as ProcessosPeriod
   const tab = VALID_TABS.includes(params.tab ?? '') ? params.tab! : 'candidatos'
 
