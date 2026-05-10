@@ -63,6 +63,7 @@ export function ProcessoCard({
   // database hasn't been updated yet to return the joined id.
   const [lookup, setLookup] = useState<LookupData | null>(null)
   const [lookupDone, setLookupDone] = useState(false)
+  const [campanhasList, setCampanhasList] = useState<string[]>([])
 
   const [obs, setObs] = useState(processo.observacoes ?? '')
   const [campanhaMeta, setCampanhaMeta] = useState(processo.campanha_meta ?? '')
@@ -73,17 +74,20 @@ export function ProcessoCard({
   useEffect(() => {
     if (!expanded || lookupDone) return
     setLookupDone(true)
-    fetch(`/api/processos/lookup?cargo=${encodeURIComponent(processo.cargo)}&empresa=${encodeURIComponent(processo.empresa)}`)
-      .then(r => r.ok ? r.json() : null)
-      .then((d: LookupData | null) => {
-        if (d) {
-          setLookup(d)
-          // Seed editable fields with DB values if not already set from RPC
-          if (!processo.campanha_meta && d.campanha_meta) setCampanhaMeta(d.campanha_meta)
-          if (!processo.observacoes && d.observacoes) setObs(d.observacoes)
-        }
-      })
-      .catch(() => {})
+    Promise.all([
+      fetch(`/api/processos/lookup?cargo=${encodeURIComponent(processo.cargo)}&empresa=${encodeURIComponent(processo.empresa)}`)
+        .then(r => r.ok ? r.json() : null),
+      fetch('/api/campanhas/list')
+        .then(r => r.ok ? r.json() : []),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ]).then(([d, list]: [LookupData | null, any]) => {
+      if (d) {
+        setLookup(d)
+        if (!processo.campanha_meta && d.campanha_meta) setCampanhaMeta(d.campanha_meta)
+        if (!processo.observacoes && d.observacoes) setObs(d.observacoes)
+      }
+      setCampanhasList(list ?? [])
+    }).catch(() => {})
   }, [expanded, lookupDone, processo.cargo, processo.empresa, processo.campanha_meta, processo.observacoes])
 
   // Effective id: prefer RPC value, fall back to lookup
@@ -348,15 +352,18 @@ export function ProcessoCard({
               Campanha Meta
             </label>
             <div className="flex gap-2">
-              <input
-                type="text"
+              <select
                 value={campanhaMeta}
                 onChange={e => setCampanhaMeta(e.target.value)}
-                placeholder="Ex: Sua Estética Dental"
                 disabled={!effectiveId}
                 className="flex-1 text-sm rounded-lg px-3 py-2 outline-none disabled:opacity-60"
-                style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-barlow)', color: '#0D0B0A', backgroundColor: '#FFFFFF' }}
-              />
+                style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-barlow)', color: campanhaMeta ? '#0D0B0A' : '#8A8986', backgroundColor: '#FFFFFF' }}
+              >
+                <option value="">Selecione uma campanha...</option>
+                {campanhasList.map(nome => (
+                  <option key={nome} value={nome}>{nome}</option>
+                ))}
+              </select>
               <button
                 onClick={saveCampanhaMeta}
                 disabled={savingCampanha || !effectiveId}
