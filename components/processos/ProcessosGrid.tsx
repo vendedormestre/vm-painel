@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { ProcessoData, ProcessosPeriod } from '@/lib/processos'
 import { ProcessoCard } from './ProcessoCard'
@@ -68,6 +68,7 @@ export function ProcessosGrid() {
   const [campanhas, setCampanhas] = useState<CampanhaMap>({})
   const [financeiroMap, setFinanceiroMap] = useState<FinanceiroMap>({})
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const syncedRef = useRef(false)
 
   const fetchFinanceiro = useCallback(async (list: ProcessoData[]) => {
     const withMeta = list.filter(p => p.campanha_meta)
@@ -128,7 +129,14 @@ export function ProcessosGrid() {
   }, [pp, fetchCampanhas, fetchFinanceiro])
 
   useEffect(() => {
-    fetchProcessos()
+    const run = async () => {
+      if (!syncedRef.current) {
+        syncedRef.current = true
+        try { await fetch('/api/processos/sync', { method: 'POST' }) } catch { /* silent */ }
+      }
+      fetchProcessos()
+    }
+    run()
   }, [fetchProcessos])
 
   // Filter by selected process
