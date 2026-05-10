@@ -26,6 +26,7 @@ export type ProcessoData = {
   meta_contratacoes: number | null
   data_inicio: string | null
   observacoes: string | null
+  campanha_meta: string | null
   created_at: string | null
   totalCandidatos: number
   parados: number
@@ -115,6 +116,7 @@ export async function getProcessosAtivos(pp: ProcessosPeriod = '3m'): Promise<Pr
       meta_contratacoes: row.meta_contratacoes != null ? Number(row.meta_contratacoes) : null,
       data_inicio:       row.data_inicio       ?? null,
       observacoes:       row.observacoes       ?? null,
+      campanha_meta:     row.campanha_meta     ?? null,
       created_at:        row.processo_created_at ?? null,
       totalCandidatos:   Number(row.total_candidatos),
       parados:           Number(row.parados),

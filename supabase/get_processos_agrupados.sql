@@ -11,6 +11,7 @@ RETURNS TABLE (
   meta_contratacoes    integer,
   data_inicio          date,
   observacoes          text,
+  campanha_meta        text,
   processo_created_at  timestamptz,
   total_candidatos     bigint,
   ultimo_candidato     timestamptz,
@@ -101,6 +102,7 @@ AS $$
     ps.meta_contratacoes,
     ps.data_inicio,
     ps.observacoes,
+    ps.campanha_meta,
     ps.created_at                                AS processo_created_at,
     COUNT(*)::bigint                             AS total_candidatos,
     MAX(b.created_at)                            AS ultimo_candidato,
@@ -150,6 +152,6 @@ AS $$
   GROUP BY
     b.cargo, b.empresa,
     ps.id, ps.status, ps.vagas_abertas, ps.meta_contratacoes,
-    ps.data_inicio, ps.observacoes, ps.created_at
+    ps.data_inicio, ps.observacoes, ps.campanha_meta, ps.created_at
   ORDER BY MAX(b.created_at) DESC
 $$;

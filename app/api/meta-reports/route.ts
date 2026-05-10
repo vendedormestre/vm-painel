@@ -11,9 +11,9 @@ export async function GET(request: NextRequest) {
   if (!(await auth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = request.nextUrl
-  const empresa = searchParams.get('empresa')
+  const campanha_meta = searchParams.get('campanha_meta')
 
-  if (!empresa) return NextResponse.json({ error: 'Missing empresa' }, { status: 400 })
+  if (!campanha_meta) return NextResponse.json({ total_investido: 0 })
 
   const supabase = createAdminClient()
 
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     .schema('dashboard')
     .from('meta_reports')
     .select('verba_gasta')
-    .ilike('campanha_nome', `%${empresa}%`)
+    .ilike('campanha_nome', `%${campanha_meta}%`)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

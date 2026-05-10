@@ -115,12 +115,13 @@ export function ProcessosGrid() {
 
   useEffect(() => {
     if (!selectedKey) { setFinanceiro(null); return }
-    const empresa = selectedKey.split('|')[0]
-    fetch(`/api/meta-reports?empresa=${encodeURIComponent(empresa)}`)
+    const campanha_meta = processos.find(p => `${p.empresa}|${p.cargo}` === selectedKey)?.campanha_meta
+    if (!campanha_meta) { setFinanceiro(null); return }
+    fetch(`/api/meta-reports?campanha_meta=${encodeURIComponent(campanha_meta)}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => setFinanceiro(d))
       .catch(() => setFinanceiro(null))
-  }, [selectedKey])
+  }, [selectedKey, processos])
 
   // Filter by selected process
   const displayProcessos = selectedKey

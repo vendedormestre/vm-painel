@@ -57,7 +57,9 @@ export function ProcessoCard({
 }) {
   const [expanded, setExpanded] = useState(false)
   const [obs, setObs] = useState(processo.observacoes ?? '')
+  const [campanhaMeta, setCampanhaMeta] = useState(processo.campanha_meta ?? '')
   const [saving, setSaving] = useState(false)
+  const [savingCampanha, setSavingCampanha] = useState(false)
   const [encerring, setEncerring] = useState(false)
 
   const saude = processo.saude
@@ -82,6 +84,18 @@ export function ProcessoCard({
       body: JSON.stringify({ observacoes: obs }),
     })
     setSaving(false)
+    onRefresh?.()
+  }
+
+  async function saveCampanhaMeta() {
+    if (!hasId) return
+    setSavingCampanha(true)
+    await fetch(`/api/processos/${processo.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ campanha_meta: campanhaMeta || null }),
+    })
+    setSavingCampanha(false)
     onRefresh?.()
   }
 
@@ -288,6 +302,36 @@ export function ProcessoCard({
               </table>
             </div>
           </div>
+
+          {/* Campanha Meta */}
+          {hasId && (
+            <div>
+              <label
+                className="block text-xs font-semibold uppercase tracking-wider mb-2"
+                style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}
+              >
+                Campanha Meta
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={campanhaMeta}
+                  onChange={e => setCampanhaMeta(e.target.value)}
+                  placeholder="Trecho do nome da campanha no Meta Ads (ex: Estética Dental)"
+                  className="flex-1 text-sm rounded-lg px-3 py-2 outline-none"
+                  style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-barlow)', color: '#0D0B0A', backgroundColor: '#FFFFFF' }}
+                />
+                <button
+                  onClick={saveCampanhaMeta}
+                  disabled={savingCampanha}
+                  className="px-4 py-1.5 rounded-md text-sm disabled:opacity-50 whitespace-nowrap"
+                  style={{ backgroundColor: '#0D0B0A', color: '#F4F3F1', fontFamily: 'var(--font-barlow)' }}
+                >
+                  {savingCampanha ? 'Salvando...' : 'Salvar'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Observations */}
           <div>
