@@ -312,34 +312,43 @@ export function ProcessoCard({
           </div>
 
           {/* Campanha Meta */}
-          {hasId && (
-            <div>
-              <label
-                className="block text-xs font-semibold uppercase tracking-wider mb-2"
-                style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}
-              >
-                Campanha Meta
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={campanhaMeta}
-                  onChange={e => setCampanhaMeta(e.target.value)}
-                  placeholder="Trecho do nome da campanha no Meta Ads (ex: Estética Dental)"
-                  className="flex-1 text-sm rounded-lg px-3 py-2 outline-none"
-                  style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-barlow)', color: '#0D0B0A', backgroundColor: '#FFFFFF' }}
-                />
-                <button
-                  onClick={saveCampanhaMeta}
-                  disabled={savingCampanha}
-                  className="px-4 py-1.5 rounded-md text-sm disabled:opacity-50 whitespace-nowrap"
-                  style={{ backgroundColor: '#0D0B0A', color: '#F4F3F1', fontFamily: 'var(--font-barlow)' }}
-                >
-                  {savingCampanha ? 'Salvando...' : 'Salvar'}
-                </button>
-              </div>
-            </div>
-          )}
+          <div>
+            <label
+              className="block text-xs font-semibold uppercase tracking-wider mb-2"
+              style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}
+            >
+              Campanha Meta
+            </label>
+            {hasId ? (
+              <>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={campanhaMeta}
+                    onChange={e => setCampanhaMeta(e.target.value)}
+                    placeholder="Ex: Sua Estética Dental"
+                    className="flex-1 text-sm rounded-lg px-3 py-2 outline-none"
+                    style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-barlow)', color: '#0D0B0A', backgroundColor: '#FFFFFF' }}
+                  />
+                  <button
+                    onClick={saveCampanhaMeta}
+                    disabled={savingCampanha}
+                    className="px-4 py-1.5 rounded-md text-sm disabled:opacity-50 whitespace-nowrap"
+                    style={{ backgroundColor: '#0D0B0A', color: '#F4F3F1', fontFamily: 'var(--font-barlow)' }}
+                  >
+                    {savingCampanha ? 'Salvando...' : 'Salvar'}
+                  </button>
+                </div>
+                <p className="mt-1.5 text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
+                  Digite o trecho do nome da campanha no Meta Ads para calcular CPL e investimento
+                </p>
+              </>
+            ) : (
+              <p className="text-xs py-2" style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}>
+                Crie um processo via &ldquo;+ Novo processo&rdquo; para habilitar este campo.
+              </p>
+            )}
+          </div>
 
           {/* Observations */}
           <div>
