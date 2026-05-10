@@ -63,32 +63,24 @@ export function ProcessoCard({
   // database hasn't been updated yet to return the joined id.
   const [lookup, setLookup] = useState<LookupData | null>(null)
   const [lookupDone, setLookupDone] = useState(false)
-  const [campanhasList, setCampanhasList] = useState<string[]>([])
 
   const [obs, setObs] = useState(processo.observacoes ?? '')
-  const [campanhaMeta, setCampanhaMeta] = useState(processo.campanha_meta ?? '')
   const [saving, setSaving] = useState(false)
-  const [savingCampanha, setSavingCampanha] = useState(false)
   const [encerring, setEncerring] = useState(false)
 
   useEffect(() => {
     if (!expanded || lookupDone) return
     setLookupDone(true)
-    Promise.all([
-      fetch(`/api/processos/lookup?cargo=${encodeURIComponent(processo.cargo)}&empresa=${encodeURIComponent(processo.empresa)}`)
-        .then(r => r.ok ? r.json() : null),
-      fetch('/api/campanhas/list')
-        .then(r => r.ok ? r.json() : []),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ]).then(([d, list]: [LookupData | null, any]) => {
-      if (d) {
-        setLookup(d)
-        if (!processo.campanha_meta && d.campanha_meta) setCampanhaMeta(d.campanha_meta)
-        if (!processo.observacoes && d.observacoes) setObs(d.observacoes)
-      }
-      setCampanhasList(list ?? [])
-    }).catch(() => {})
-  }, [expanded, lookupDone, processo.cargo, processo.empresa, processo.campanha_meta, processo.observacoes])
+    fetch(`/api/processos/lookup?cargo=${encodeURIComponent(processo.cargo)}&empresa=${encodeURIComponent(processo.empresa)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then((d: LookupData | null) => {
+        if (d) {
+          setLookup(d)
+          if (!processo.observacoes && d.observacoes) setObs(d.observacoes)
+        }
+      })
+      .catch(() => {})
+  }, [expanded, lookupDone, processo.cargo, processo.empresa, processo.observacoes])
 
   // Effective id: prefer RPC value, fall back to lookup
   const effectiveId = processo.id ?? lookup?.id ?? null
@@ -104,9 +96,6 @@ export function ProcessoCard({
 
   const max = processo.funil[0].count || 1
 
-  // For financial metrics, use campanha_meta from lookup if RPC didn't return it
-  const resolvedCampanhaMeta = processo.campanha_meta ?? lookup?.campanha_meta ?? null
-
   async function saveObs() {
     if (!effectiveId) return
     setSaving(true)
@@ -116,18 +105,6 @@ export function ProcessoCard({
       body: JSON.stringify({ observacoes: obs }),
     })
     setSaving(false)
-    onRefresh?.()
-  }
-
-  async function saveCampanhaMeta() {
-    if (!effectiveId) return
-    setSavingCampanha(true)
-    await fetch(`/api/processos/${effectiveId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ campanha_meta: campanhaMeta || null }),
-    })
-    setSavingCampanha(false)
     onRefresh?.()
   }
 
@@ -219,25 +196,13 @@ export function ProcessoCard({
           ))}
         </div>
 
-        {/* Métricas financeiras — sempre visíveis */}
+        {/* Métricas financeiras */}
         {(() => {
           const inv = financeiro?.total_investido ?? 0
-          const hasMeta = !!resolvedCampanhaMeta
           const cols = [
-            {
-              label: 'Investido',
-              value: hasMeta && inv > 0 ? fmtBRL(inv) : '—',
-            },
-            {
-              label: 'CPL',
-              value: hasMeta && inv > 0 && processo.totalCandidatos > 0
-                ? fmtBRL(inv / processo.totalCandidatos) : '—',
-            },
-            {
-              label: 'Custo/Contratação',
-              value: hasMeta && inv > 0 && processo.contratados > 0
-                ? fmtBRL(inv / processo.contratados) : '—',
-            },
+            { label: 'Investido', value: inv > 0 ? fmtBRL(inv) : '—' },
+            { label: 'CPL', value: inv > 0 && processo.totalCandidatos > 0 ? fmtBRL(inv / processo.totalCandidatos) : '—' },
+            { label: 'Custo/Contratação', value: inv > 0 && processo.contratados > 0 ? fmtBRL(inv / processo.contratados) : '—' },
           ]
           return (
             <div className="mt-4 rounded-lg overflow-hidden" style={{ border: '1px solid #E8E7E4' }}>
@@ -251,14 +216,6 @@ export function ProcessoCard({
                   </div>
                 ))}
               </div>
-              {!hasMeta && (
-                <p
-                  className="text-center text-xs py-1.5 border-t"
-                  style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)', borderColor: '#E8E7E4' }}
-                >
-                  Configure em Detalhes
-                </p>
-              )}
             </div>
           )
         })()}
@@ -341,41 +298,6 @@ export function ProcessoCard({
                 </tbody>
               </table>
             </div>
-          </div>
-
-          {/* Campanha Meta */}
-          <div>
-            <label
-              className="block text-xs font-semibold uppercase tracking-wider mb-2"
-              style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}
-            >
-              Campanha Meta
-            </label>
-            <div className="flex gap-2">
-              <select
-                value={campanhaMeta}
-                onChange={e => setCampanhaMeta(e.target.value)}
-                disabled={!effectiveId}
-                className="flex-1 text-sm rounded-lg px-3 py-2 outline-none disabled:opacity-60"
-                style={{ border: '1px solid #C8C7C3', fontFamily: 'var(--font-barlow)', color: campanhaMeta ? '#0D0B0A' : '#8A8986', backgroundColor: '#FFFFFF' }}
-              >
-                <option value="">Selecione uma campanha...</option>
-                {campanhasList.map(nome => (
-                  <option key={nome} value={nome}>{nome}</option>
-                ))}
-              </select>
-              <button
-                onClick={saveCampanhaMeta}
-                disabled={savingCampanha || !effectiveId}
-                className="px-4 py-1.5 rounded-md text-sm disabled:opacity-50 whitespace-nowrap"
-                style={{ backgroundColor: '#0D0B0A', color: '#F4F3F1', fontFamily: 'var(--font-barlow)' }}
-              >
-                {savingCampanha ? 'Salvando...' : 'Salvar'}
-              </button>
-            </div>
-            <p className="mt-1.5 text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
-              Trecho do nome da campanha no Meta Ads
-            </p>
           </div>
 
           {/* Observations */}

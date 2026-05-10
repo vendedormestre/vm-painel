@@ -11,18 +11,19 @@ export async function GET(request: NextRequest) {
   if (!(await auth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = request.nextUrl
-  const campanha_meta = searchParams.get('campanha_meta')
-
-  if (!campanha_meta) return NextResponse.json({ total_investido: 0 })
-
-  const supabase = createAdminClient()
+  const campanha_nome = searchParams.get('campanha_nome') // exact match; omit to sum all
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  let query = (createAdminClient() as any)
     .schema('dashboard')
     .from('meta_reports')
     .select('verba_gasta')
-    .ilike('campanha_nome', `%${campanha_meta}%`)
+
+  if (campanha_nome) {
+    query = query.eq('campanha_nome', campanha_nome)
+  }
+
+  const { data, error } = await query
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

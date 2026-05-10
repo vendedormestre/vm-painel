@@ -12,7 +12,18 @@ const VALID_PP: ProcessosPeriod[] = ['mes', '3m', 'all']
 type CampanhaMetrics = { total_spend: number; total_leads: number; cpl_medio: number | null; matched_rows: number }
 type CampanhaMap = Record<string, CampanhaMetrics> // key: `${empresa}|${cargo}`
 type FinanceiroMetrics = { total_investido: number }
-type FinanceiroMap = Record<string, FinanceiroMetrics> // key: `${empresa}|${cargo}`
+
+const dropdownStyle: React.CSSProperties = {
+  backgroundColor: '#FFFFFF',
+  border: '1px solid #C8C7C3',
+  borderRadius: 6,
+  padding: '4px 8px',
+  fontSize: 12,
+  fontFamily: 'var(--font-barlow)',
+  color: '#0D0B0A',
+  cursor: 'pointer',
+  outline: 'none',
+}
 
 function getPeriodDates(period: string): { from: string; to: string } {
   const now = new Date()
@@ -66,24 +77,19 @@ export function ProcessosGrid() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [campanhas, setCampanhas] = useState<CampanhaMap>({})
-  const [financeiroMap, setFinanceiroMap] = useState<FinanceiroMap>({})
+  const [campanhasList, setCampanhasList] = useState<string[]>([])
+  const [selectedCampanha, setSelectedCampanha] = useState('')
+  const [globalFinanceiro, setGlobalFinanceiro] = useState<FinanceiroMetrics | null>(null)
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const syncedRef = useRef(false)
 
-  const fetchFinanceiro = useCallback(async (list: ProcessoData[]) => {
-    const withMeta = list.filter(p => p.campanha_meta)
-    if (withMeta.length === 0) return
-    const results = await Promise.allSettled(
-      withMeta.map(async p => {
-        const res = await fetch(`/api/meta-reports?campanha_meta=${encodeURIComponent(p.campanha_meta!)}`)
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const data: FinanceiroMetrics = await res.json()
-        return { key: `${p.empresa}|${p.cargo}`, data }
-      })
-    )
-    const map: FinanceiroMap = {}
-    results.forEach(r => { if (r.status === 'fulfilled') map[r.value.key] = r.value.data })
-    setFinanceiroMap(map)
+  // Fetch global investment for the selected campaign (or all if empty)
+  const fetchGlobalFinanceiro = useCallback(async (campanha: string) => {
+    const qs = campanha ? `?campanha_nome=${encodeURIComponent(campanha)}` : ''
+    try {
+      const res = await fetch(`/api/meta-reports${qs}`)
+      if (res.ok) setGlobalFinanceiro(await res.json())
+    } catch { /* silent */ }
   }, [])
 
   const fetchCampanhas = useCallback(async (list: ProcessoData[]) => {
@@ -120,14 +126,14 @@ export function ProcessosGrid() {
       const data: ProcessoData[] = await res.json()
       setProcessos(data)
       fetchCampanhas(data)
-      fetchFinanceiro(data)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro desconhecido')
     } finally {
       setLoading(false)
     }
-  }, [pp, fetchCampanhas, fetchFinanceiro])
+  }, [pp, fetchCampanhas])
 
+  // Sync + load on mount / pp change
   useEffect(() => {
     const run = async () => {
       if (!syncedRef.current) {
@@ -138,6 +144,20 @@ export function ProcessosGrid() {
     }
     run()
   }, [fetchProcessos])
+
+  // Load campaigns list once
+  useEffect(() => {
+    fetch('/api/campanhas/list')
+      .then(r => r.ok ? r.json() : [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .then((d: any) => setCampanhasList(Array.isArray(d) ? d : []))
+      .catch(() => {})
+  }, [])
+
+  // Refresh global financeiro when campaign selection changes
+  useEffect(() => {
+    fetchGlobalFinanceiro(selectedCampanha)
+  }, [selectedCampanha, fetchGlobalFinanceiro])
 
   // Filter by selected process
   const displayProcessos = selectedKey
@@ -170,23 +190,25 @@ export function ProcessosGrid() {
             <select
               value={selectedKey ?? ''}
               onChange={e => setSelectedKey(e.target.value || null)}
-              style={{
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #C8C7C3',
-                borderRadius: 6,
-                padding: '4px 8px',
-                fontSize: 12,
-                fontFamily: 'var(--font-barlow)',
-                color: '#0D0B0A',
-                cursor: 'pointer',
-                outline: 'none',
-              }}
+              style={dropdownStyle}
             >
               <option value="">Todos os processos</option>
               {processos.map(p => (
                 <option key={`${p.empresa}|${p.cargo}`} value={`${p.empresa}|${p.cargo}`}>
                   {p.cargo} — {p.empresa}
                 </option>
+              ))}
+            </select>
+          )}
+          {campanhasList.length > 0 && (
+            <select
+              value={selectedCampanha}
+              onChange={e => setSelectedCampanha(e.target.value)}
+              style={dropdownStyle}
+            >
+              <option value="">Todas as campanhas</option>
+              {campanhasList.map(nome => (
+                <option key={nome} value={nome}>{nome}</option>
               ))}
             </select>
           )}
@@ -235,7 +257,7 @@ export function ProcessosGrid() {
                     key={`${p.empresa}|${p.cargo}`}
                     processo={p}
                     campanha={campanhas[`${p.empresa}|${p.cargo}`] ?? null}
-                    financeiro={financeiroMap[`${p.empresa}|${p.cargo}`] ?? null}
+                    financeiro={globalFinanceiro}
                     onRefresh={fetchProcessos}
                   />
                 ))}
