@@ -12,6 +12,7 @@ const VALID_PP: ProcessosPeriod[] = ['mes', '3m', 'all']
 type CampanhaMetrics = { total_spend: number; total_leads: number; cpl_medio: number | null; matched_rows: number }
 type CampanhaMap = Record<string, CampanhaMetrics> // key: `${empresa}|${cargo}`
 type FinanceiroMetrics = { total_investido: number }
+type FinanceiroMap = Record<string, FinanceiroMetrics> // key: `${empresa}|${cargo}`
 
 function getPeriodDates(period: string): { from: string; to: string } {
   const now = new Date()
@@ -65,8 +66,24 @@ export function ProcessosGrid() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [campanhas, setCampanhas] = useState<CampanhaMap>({})
+  const [financeiroMap, setFinanceiroMap] = useState<FinanceiroMap>({})
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
-  const [financeiro, setFinanceiro] = useState<FinanceiroMetrics | null>(null)
+
+  const fetchFinanceiro = useCallback(async (list: ProcessoData[]) => {
+    const withMeta = list.filter(p => p.campanha_meta)
+    if (withMeta.length === 0) return
+    const results = await Promise.allSettled(
+      withMeta.map(async p => {
+        const res = await fetch(`/api/meta-reports?campanha_meta=${encodeURIComponent(p.campanha_meta!)}`)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data: FinanceiroMetrics = await res.json()
+        return { key: `${p.empresa}|${p.cargo}`, data }
+      })
+    )
+    const map: FinanceiroMap = {}
+    results.forEach(r => { if (r.status === 'fulfilled') map[r.value.key] = r.value.data })
+    setFinanceiroMap(map)
+  }, [])
 
   const fetchCampanhas = useCallback(async (list: ProcessoData[]) => {
     if (list.length === 0) return
@@ -102,26 +119,17 @@ export function ProcessosGrid() {
       const data: ProcessoData[] = await res.json()
       setProcessos(data)
       fetchCampanhas(data)
+      fetchFinanceiro(data)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro desconhecido')
     } finally {
       setLoading(false)
     }
-  }, [pp, fetchCampanhas])
+  }, [pp, fetchCampanhas, fetchFinanceiro])
 
   useEffect(() => {
     fetchProcessos()
   }, [fetchProcessos])
-
-  useEffect(() => {
-    if (!selectedKey) { setFinanceiro(null); return }
-    const campanha_meta = processos.find(p => `${p.empresa}|${p.cargo}` === selectedKey)?.campanha_meta
-    if (!campanha_meta) { setFinanceiro(null); return }
-    fetch(`/api/meta-reports?campanha_meta=${encodeURIComponent(campanha_meta)}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(d => setFinanceiro(d))
-      .catch(() => setFinanceiro(null))
-  }, [selectedKey, processos])
 
   // Filter by selected process
   const displayProcessos = selectedKey
@@ -219,7 +227,7 @@ export function ProcessosGrid() {
                     key={`${p.empresa}|${p.cargo}`}
                     processo={p}
                     campanha={campanhas[`${p.empresa}|${p.cargo}`] ?? null}
-                    financeiro={selectedKey === `${p.empresa}|${p.cargo}` ? financeiro : null}
+                    financeiro={financeiroMap[`${p.empresa}|${p.cargo}`] ?? null}
                     onRefresh={fetchProcessos}
                   />
                 ))}

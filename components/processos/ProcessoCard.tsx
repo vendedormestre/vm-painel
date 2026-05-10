@@ -187,41 +187,49 @@ export function ProcessoCard({
           ))}
         </div>
 
-        {/* Métricas financeiras — exibidas apenas quando processo selecionado no filtro */}
-        {financeiro !== null && financeiro !== undefined && (
-          <div
-            className="mt-4 rounded-lg grid grid-cols-3 divide-x overflow-hidden"
-            style={{ border: '1px solid #E8E7E4' }}
-          >
-            {[
-              {
-                label: 'Investido',
-                value: financeiro.total_investido > 0 ? fmtBRL(financeiro.total_investido) : '—',
-              },
-              {
-                label: 'CPL',
-                value:
-                  financeiro.total_investido > 0 && processo.totalCandidatos > 0
-                    ? fmtBRL(financeiro.total_investido / processo.totalCandidatos)
-                    : '—',
-              },
-              {
-                label: 'Custo/Contratação',
-                value:
-                  financeiro.total_investido > 0 && processo.contratados > 0
-                    ? fmtBRL(financeiro.total_investido / processo.contratados)
-                    : '—',
-              },
-            ].map(({ label, value }) => (
-              <div key={label} className="text-center px-3 py-3" style={{ backgroundColor: '#FFFFFF' }}>
-                <p className="text-xs mb-1" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>{label}</p>
-                <p className="font-bold text-sm leading-none" style={{ color: '#FF5500', fontFamily: 'var(--font-barlow-condensed)' }}>
-                  {value}
-                </p>
+        {/* Métricas financeiras — sempre visíveis */}
+        {(() => {
+          const inv = financeiro?.total_investido ?? 0
+          const hasMeta = !!processo.campanha_meta
+          const cols = [
+            {
+              label: 'Investido',
+              value: hasMeta && inv > 0 ? fmtBRL(inv) : '—',
+            },
+            {
+              label: 'CPL',
+              value: hasMeta && inv > 0 && processo.totalCandidatos > 0
+                ? fmtBRL(inv / processo.totalCandidatos) : '—',
+            },
+            {
+              label: 'Custo/Contratação',
+              value: hasMeta && inv > 0 && processo.contratados > 0
+                ? fmtBRL(inv / processo.contratados) : '—',
+            },
+          ]
+          return (
+            <div className="mt-4 rounded-lg overflow-hidden" style={{ border: '1px solid #E8E7E4' }}>
+              <div className="grid grid-cols-3">
+                {cols.map(({ label, value }) => (
+                  <div key={label} className="text-center px-3 py-3" style={{ backgroundColor: '#FFFFFF' }}>
+                    <p className="text-xs mb-1" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>{label}</p>
+                    <p className="font-bold text-sm leading-none" style={{ color: '#FF5500', fontFamily: 'var(--font-barlow-condensed)' }}>
+                      {value}
+                    </p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+              {!hasMeta && (
+                <p
+                  className="text-center text-xs py-1.5 border-t"
+                  style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)', borderColor: '#E8E7E4' }}
+                >
+                  Configure a campanha em Detalhes
+                </p>
+              )}
+            </div>
+          )
+        })()}
 
         <div className="mt-4 flex items-center justify-between">
           <p className="text-xs" style={{ color: '#C8C7C3', fontFamily: 'var(--font-barlow)' }}>
