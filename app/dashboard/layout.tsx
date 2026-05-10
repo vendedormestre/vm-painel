@@ -1,18 +1,8 @@
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
-import LogoutButton from './LogoutButton'
-
-export default async function DashboardLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const cookieStore = await cookies()
-  const session = cookieStore.get('vm_session')
-  if (!session || session.value !== 'authenticated') {
-    redirect('/login')
-  }
-
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F4F3F1' }}>
       <header
@@ -25,7 +15,6 @@ export default async function DashboardLayout({
         >
           Vendedor Mestre
         </span>
-        <LogoutButton />
       </header>
 
       <main className="flex-1 pt-16">{children}</main>
