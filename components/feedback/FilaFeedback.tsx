@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 
 type Candidato = {
   fullname: string | null
@@ -200,6 +201,7 @@ function CandidatoRow({
 }
 
 export function FilaFeedback() {
+  const router = useRouter()
   const [queue, setQueue] = useState<Candidato[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -208,6 +210,14 @@ export function FilaFeedback() {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [bulkStatus, setBulkStatus] = useState('contactado')
   const [bulkLoading, setBulkLoading] = useState(false)
+  const [toast, setToast] = useState(false)
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function showToast() {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    setToast(true)
+    toastTimerRef.current = setTimeout(() => setToast(false), 2500)
+  }
 
   useEffect(() => {
     fetch('/api/feedback/candidatos')
@@ -256,6 +266,9 @@ export function FilaFeedback() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, status }),
+    }).then(() => {
+      showToast()
+      router.refresh()
     })
   }
 
@@ -271,6 +284,8 @@ export function FilaFeedback() {
       body: JSON.stringify({ emails, status: bulkStatus }),
     })
     setBulkLoading(false)
+    showToast()
+    router.refresh()
   }
 
   if (loading) {
@@ -284,9 +299,19 @@ export function FilaFeedback() {
     <div className="rounded-xl overflow-hidden" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E7E4' }}>
       {/* Header */}
       <div className="px-5 py-4 border-b flex items-center justify-between flex-wrap gap-3" style={{ borderColor: '#E8E7E4' }}>
-        <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-barlow-condensed)', color: '#0D0B0A' }}>
-          Fila de feedback
-        </h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-barlow-condensed)', color: '#0D0B0A' }}>
+            Fila de feedback
+          </h3>
+          {toast && (
+            <span
+              className="text-xs px-3 py-1 rounded-full"
+              style={{ backgroundColor: '#0D0B0A', color: '#F4F3F1', fontFamily: 'var(--font-barlow)' }}
+            >
+              Status atualizado
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-3 flex-wrap">
           {queue.length > 0 && (
             <span className="text-xs px-2.5 py-1 rounded-full" style={{ backgroundColor: '#FEF3C7', color: '#92400E', fontFamily: 'var(--font-barlow)' }}>

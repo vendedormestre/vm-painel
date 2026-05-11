@@ -51,9 +51,13 @@ export async function GET() {
   return NextResponse.json(queue)
 }
 
+// aprovado_triagem em feedback_candidatos corresponde a 'aprovado' em aplicacao.status_processo
+const APLICACAO_STATUS_MAP: Record<string, string> = {
+  aprovado_triagem: 'aprovado',
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json()
-  // Support single email or bulk array
   const emails: string[] = body.emails ?? (body.email ? [body.email] : [])
   const { status, observacoes } = body
 
@@ -61,18 +65,32 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'email(s) e status são obrigatórios' }, { status: 400 })
   }
 
+  const supabase = createAdminClient()
+  const now = new Date().toISOString()
+
   const records = emails.map(email => ({
     candidato_email: email,
     status,
     observacoes:     observacoes ?? null,
-    updated_at:      new Date().toISOString(),
+    updated_at:      now,
   }))
 
-  const { error } = await adminDb()
-    .schema('dashboard')
-    .from('feedback_candidatos')
-    .upsert(records, { onConflict: 'candidato_email' })
+  const aplicacaoStatus = APLICACAO_STATUS_MAP[status] ?? status
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  // Atualiza feedback_candidatos e aplicacao.status_processo em paralelo
+  const [feedbackResult] = await Promise.all([
+    adminDb()
+      .schema('dashboard')
+      .from('feedback_candidatos')
+      .upsert(records, { onConflict: 'candidato_email' }),
+    supabase
+      .from('aplicacao')
+      .update({ status_processo: aplicacaoStatus })
+      .in('email', emails),
+  ])
+
+  if (feedbackResult.error) {
+    return NextResponse.json({ error: feedbackResult.error.message }, { status: 500 })
+  }
   return NextResponse.json({ ok: true })
 }
