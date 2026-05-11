@@ -4,8 +4,7 @@ import { useState, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import type { ProcessoMetasData } from '@/lib/processo-view'
 
-const VALID_FIELDS = ['meta_candidatos', 'meta_cpl', 'meta_videos', 'meta_contratacoes'] as const
-type MetaField = (typeof VALID_FIELDS)[number]
+type MetaField = 'meta_candidatos' | 'meta_cpl' | 'meta_videos' | 'meta_contratacoes'
 
 function PencilIcon() {
   return (
