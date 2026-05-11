@@ -9,6 +9,7 @@ import {
 } from '@/lib/processo-view'
 import { Period } from '@/lib/data'
 import { ProcessoSelector } from './ProcessoSelector'
+import { ProcessoPeriodFilter } from './ProcessoPeriodFilter'
 import { VolumeChart } from '@/components/pipeline/VolumeChart'
 import { ChannelChart } from '@/components/pipeline/ChannelChart'
 import { ConversionFunnel } from '@/components/pipeline/ConversionFunnel'
@@ -17,7 +18,7 @@ function KpiCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div
       className="rounded-xl p-6 flex flex-col gap-2"
-      style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E7E4' }}
+      style={{ backgroundColor: '#F4F3F1', border: '1px solid #E8E7E4' }}
     >
       <p
         className="text-xs uppercase tracking-wider"
@@ -95,10 +96,7 @@ function InfoCard({ info }: { info: ProcessoInfoData }) {
       <div className="flex flex-col gap-3">
         {rows.map(row => (
           <div key={row.label} className="flex items-center justify-between gap-4">
-            <span
-              className="text-sm"
-              style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}
-            >
+            <span className="text-sm" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
               {row.label}
             </span>
             <span
@@ -117,12 +115,12 @@ function InfoCard({ info }: { info: ProcessoInfoData }) {
 function EmptyState() {
   return (
     <div
-      className="rounded-xl flex flex-col items-center justify-center gap-3 py-16"
-      style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E7E4' }}
+      className="rounded-xl flex flex-col items-center justify-center gap-3 py-12"
+      style={{ backgroundColor: '#F4F3F1', border: '1px solid #E8E7E4' }}
     >
       <svg
-        width="40"
-        height="40"
+        width="36"
+        height="36"
         viewBox="0 0 24 24"
         fill="none"
         stroke="#C8C7C3"
@@ -133,10 +131,7 @@ function EmptyState() {
         <circle cx="11" cy="11" r="8" />
         <path d="m21 21-4.35-4.35" />
       </svg>
-      <p
-        className="text-sm text-center"
-        style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}
-      >
+      <p className="text-sm" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
         Selecione um processo para visualizar os dados
       </p>
     </div>
@@ -144,11 +139,11 @@ function EmptyState() {
 }
 
 type Props = {
-  period: Period
   codigoPs?: string
+  pvPeriod: Period
 }
 
-export async function ProcessoViewBlock({ period, codigoPs }: Props) {
+export async function ProcessoViewBlock({ codigoPs, pvPeriod }: Props) {
   const processos = await getProcessosAtivos()
 
   let data: {
@@ -162,21 +157,20 @@ export async function ProcessoViewBlock({ period, codigoPs }: Props) {
   if (codigoPs) {
     try {
       const [kpis, dailyVolume, channelData, funnelData, info] = await Promise.all([
-        getProcessoKpis(codigoPs, period),
-        getProcessoDailyVolume(codigoPs, period),
-        getProcessoChannelData(codigoPs, period),
-        getProcessoFunnelData(codigoPs, period),
+        getProcessoKpis(codigoPs, pvPeriod),
+        getProcessoDailyVolume(codigoPs, pvPeriod),
+        getProcessoChannelData(codigoPs, pvPeriod),
+        getProcessoFunnelData(codigoPs, pvPeriod),
         getProcessoInfo(codigoPs),
       ])
       data = { kpis, dailyVolume, channelData, funnelData, info }
     } catch {
       return (
-        <div className="flex flex-col gap-5">
-          <ProcessoSelector processos={processos} codigoPs={codigoPs} />
-          <p
-            className="text-sm text-center py-4"
-            style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}
-          >
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <ProcessoSelector processos={processos} codigoPs={codigoPs} />
+          </div>
+          <p className="text-sm text-center py-4" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
             Erro ao carregar dados do processo. Tente novamente.
           </p>
         </div>
@@ -186,7 +180,11 @@ export async function ProcessoViewBlock({ period, codigoPs }: Props) {
 
   return (
     <div className="flex flex-col gap-5">
-      <ProcessoSelector processos={processos} codigoPs={codigoPs} />
+      {/* Header: selector + period filter */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <ProcessoSelector processos={processos} codigoPs={codigoPs} />
+        {codigoPs && <ProcessoPeriodFilter current={pvPeriod} />}
+      </div>
 
       {data ? (
         <div className="flex flex-col gap-6">

@@ -95,16 +95,17 @@ export async function getProcessoChannelData(codigoPs: string, period: Period) {
   const supabase = createAdminClient()
   const { start, end } = getPeriodDates(period)
 
+  // Column name has a hyphen — use select('*') and access via bracket notation
   const { data } = await supabase
     .from('aplicacao')
-    .select('utm_source')
+    .select('*')
     .eq('codigo_ps', codigoPs)
     .gte('created_at', start)
     .lte('created_at', end)
 
   const grouped: Record<string, number> = {}
   data?.forEach(row => {
-    const source = (row.utm_source as string) || 'Direto'
+    const source = ((row as Record<string, unknown>)['utm-source'] as string) || 'Direto'
     grouped[source] = (grouped[source] || 0) + 1
   })
 
@@ -128,9 +129,9 @@ export async function getProcessoFunnelData(codigoPs: string, period: Period) {
 
   const [total, contactados, videos, aprovados, contratados] = await Promise.all([
     base(),
-    base().in('status_processo', ['contactado', 'video_enviado', 'aprovado_triagem', 'contratado']),
+    base().eq('status_processo', 'contactado'),
     base().not('link_video', 'is', null),
-    base().in('status_processo', ['aprovado_triagem', 'contratado']),
+    base().eq('status_processo', 'aprovado'),
     base().eq('status_processo', 'contratado'),
   ])
 

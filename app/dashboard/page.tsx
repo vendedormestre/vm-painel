@@ -5,12 +5,10 @@ import { PeriodFilter } from '@/components/PeriodFilter'
 import { TabBar } from '@/components/TabBar'
 import { KpiBar } from '@/components/kpis/KpiBar'
 import { Pipeline } from '@/components/pipeline/Pipeline'
-import { ProcessosGrid } from '@/components/processos/ProcessosGrid'
 import { LeadsB2B } from '@/components/leads-b2b/LeadsB2B'
 import { FeedbackModule } from '@/components/feedback/FeedbackModule'
 import { MetasModule } from '@/components/metas/MetasModule'
 import { AIInsight } from '@/components/ai-insight/AIInsight'
-import { ProcessoViewBlock } from '@/components/processo-view/ProcessoViewBlock'
 
 function ModuleSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -63,6 +61,7 @@ type PageProps = {
     lp?: string
     tab?: string
     pv?: string
+    pvp?: string
   }>
 }
 
@@ -74,6 +73,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const pageSize = VALID_PS.includes(psRaw) ? psRaw : 10
   const lp = (VALID_PP.includes(params.lp as ProcessosPeriod) ? params.lp : 'all') as ProcessosPeriod
   const tab = VALID_TABS.includes(params.tab ?? '') ? params.tab! : 'candidatos'
+  const pvPeriod = (VALID_PERIODS.includes(params.pvp ?? '') ? params.pvp : 'mes') as Period
 
   return (
     <div className="px-6 py-8 max-w-7xl mx-auto flex flex-col gap-6">
@@ -134,33 +134,13 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 cargo={params.cargo}
                 empresa={params.empresa}
                 status={params.status}
+                codigoPs={params.pv}
+                pvPeriod={pvPeriod}
               />
             </Suspense>
           </ModuleSection>
 
-          {/* Módulo 2.5 — Visão por Processo */}
-          <ModuleSection title="Visão por Processo">
-            <Suspense
-              fallback={
-                <div className="flex flex-col gap-5">
-                  <BlockSkeleton height={44} />
-                  <GridSkeleton cols={4} height={96} />
-                  <GridSkeleton cols={2} height={260} />
-                </div>
-              }
-            >
-              <ProcessoViewBlock period={period} codigoPs={params.pv} />
-            </Suspense>
-          </ModuleSection>
-
-          {/* Módulo 3 — Processos Seletivos */}
-          <ModuleSection title="Processos Seletivos">
-            <Suspense fallback={<GridSkeleton cols={2} height={320} />}>
-              <ProcessosGrid />
-            </Suspense>
-          </ModuleSection>
-
-          {/* Módulo 4 — Feedback Comercial */}
+          {/* Módulo 3 — Feedback Comercial */}
           <ModuleSection title="Feedback Comercial">
             <Suspense
               fallback={
