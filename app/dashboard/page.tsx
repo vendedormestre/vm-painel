@@ -7,7 +7,6 @@ import { KpiBar } from '@/components/kpis/KpiBar'
 import { Pipeline } from '@/components/pipeline/Pipeline'
 import { LeadsB2B } from '@/components/leads-b2b/LeadsB2B'
 import { FeedbackModule } from '@/components/feedback/FeedbackModule'
-import { MetasModule } from '@/components/metas/MetasModule'
 import { AIInsight } from '@/components/ai-insight/AIInsight'
 
 function ModuleSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -151,13 +150,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               }
             >
               <FeedbackModule />
-            </Suspense>
-          </ModuleSection>
-
-          {/* Módulo 5 — Metas e Acompanhamento */}
-          <ModuleSection title="Metas e Acompanhamento">
-            <Suspense fallback={<GridSkeleton cols={2} height={360} />}>
-              <MetasModule />
             </Suspense>
           </ModuleSection>
 
