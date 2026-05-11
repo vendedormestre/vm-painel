@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
 type Candidato = {
+  id: string
   fullname: string | null
   email: string
   whatsapp: string | null
@@ -11,8 +12,10 @@ type Candidato = {
   empresa: string | null
   created_at: string
   utm_source: string | null
+  codigo_ps: string | null
+  link_video: string | null
   status_atual: string
-  observacoes: string
+  informacoes_relevantes: string
   dias_aguardando: number
 }
 
@@ -67,10 +70,10 @@ function CandidatoRow({
   candidato: Candidato
   selected: boolean
   onToggle: (email: string) => void
-  onStatusChange: (email: string, status: string) => void
+  onStatusChange: (id: string, email: string, status: string) => void
 }) {
-  const [obs, setObs] = useState(candidato.observacoes)
-  const savedObs = useRef(candidato.observacoes)
+  const [obs, setObs] = useState(candidato.informacoes_relevantes)
+  const savedObs = useRef(candidato.informacoes_relevantes)
 
   async function saveObs() {
     if (obs === savedObs.current) return
@@ -78,7 +81,7 @@ function CandidatoRow({
     fetch('/api/feedback/candidatos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: candidato.email, status: candidato.status_atual, observacoes: obs }),
+      body: JSON.stringify({ id: candidato.id, email: candidato.email, status: candidato.status_atual, informacoes_relevantes: obs }),
     })
   }
 
@@ -131,7 +134,7 @@ function CandidatoRow({
         <div className="sm:hidden mb-1">
           <select
             defaultValue=""
-            onChange={e => { if (e.target.value) { onStatusChange(candidato.email, e.target.value); (e.target as HTMLSelectElement).value = '' } }}
+            onChange={e => { if (e.target.value) { onStatusChange(candidato.id, candidato.email, e.target.value); (e.target as HTMLSelectElement).value = '' } }}
             style={{ ...sel, width: '100%' }}
           >
             <option value="" disabled>Atualizar status...</option>
@@ -140,22 +143,26 @@ function CandidatoRow({
         </div>
         {/* Desktop: buttons */}
         <div className="hidden sm:flex flex-wrap gap-1">
-          {STATUS_BTNS.map(b => (
-            <button
-              key={b.value}
-              onClick={() => onStatusChange(candidato.email, b.value)}
-              className="text-xs px-2 py-1 rounded transition-opacity hover:opacity-80"
-              style={{
-                backgroundColor: `${b.color}1A`,
-                color: b.color,
-                border: `1px solid ${b.color}40`,
-                fontFamily: 'var(--font-barlow)',
-                transition: 'opacity 200ms',
-              }}
-            >
-              {b.label}
-            </button>
-          ))}
+          {STATUS_BTNS.map(b => {
+            const isActive = candidato.status_atual === b.value
+            return (
+              <button
+                key={b.value}
+                onClick={() => onStatusChange(candidato.id, candidato.email, b.value)}
+                className="text-xs px-2 py-1 rounded transition-opacity hover:opacity-80"
+                style={{
+                  backgroundColor: isActive ? b.color : `${b.color}1A`,
+                  color: isActive ? '#FFFFFF' : b.color,
+                  border: `1px solid ${isActive ? b.color : `${b.color}40`}`,
+                  fontFamily: 'var(--font-barlow)',
+                  transition: 'opacity 200ms',
+                  fontWeight: isActive ? 600 : undefined,
+                }}
+              >
+                {b.label}
+              </button>
+            )
+          })}
         </div>
         {/* Observação — explicitly interactive */}
         <textarea
@@ -270,13 +277,13 @@ export function FilaFeedback() {
     })
   }
 
-  function handleStatusChange(email: string, status: string) {
+  function handleStatusChange(id: string, email: string, status: string) {
     setQueue(q => q.filter(c => c.email !== email))
     setSelected(prev => { const n = new Set(prev); n.delete(email); return n })
     fetch('/api/feedback/candidatos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, status }),
+      body: JSON.stringify({ id, email, status }),
     }).then(() => {
       showToast()
       router.refresh()

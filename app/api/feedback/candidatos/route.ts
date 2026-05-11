@@ -11,9 +11,9 @@ export async function GET() {
   const [aplicacaoRes, feedbackRes] = await Promise.all([
     supabase
       .from('aplicacao')
-      .select('fullname, email, whatsapp, cargo, empresa, created_at, utm_source')
+      .select('id, fullname, email, whatsapp, cargo, empresa, created_at, utm_source, status, informacoes_relevantes, codigo_ps, link_video')
       .order('created_at', { ascending: false }),
-    db.schema('dashboard').from('feedback_candidatos').select('candidato_email, status, updated_at, observacoes'),
+    db.schema('dashboard').from('feedback_candidatos').select('candidato_email, status, updated_at'),
   ])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -26,8 +26,8 @@ export async function GET() {
   const queue = (aplicacaoRes.data ?? [])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .filter((a: any) => {
-      const fb = feedbackMap[a.email]
-      return !fb || fb.status === 'novo'
+      const status = a.status ?? 'novo'
+      return status === 'novo' || status === 'contactado' || status === 'video_enviado'
     })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .map((a: any) => {
@@ -35,15 +35,18 @@ export async function GET() {
       const ref = fb?.updated_at ? new Date(fb.updated_at) : new Date(a.created_at)
       const dias = Math.floor((now - ref.getTime()) / 86400000)
       return {
-        fullname:       a.fullname      ?? null,
-        email:          a.email,
-        whatsapp:       a.whatsapp      ?? null,
-        cargo:          a.cargo         ?? null,
-        empresa:        a.empresa       ?? null,
-        created_at:     a.created_at,
-        utm_source:     a.utm_source    ?? null,
-        status_atual:   fb?.status      ?? 'novo',
-        observacoes:    fb?.observacoes ?? '',
+        id:              a.id,
+        fullname:        a.fullname              ?? null,
+        email:           a.email,
+        whatsapp:        a.whatsapp              ?? null,
+        cargo:           a.cargo                 ?? null,
+        empresa:         a.empresa               ?? null,
+        created_at:      a.created_at,
+        utm_source:      a.utm_source            ?? null,
+        codigo_ps:       a.codigo_ps             ?? null,
+        link_video:      a.link_video            ?? null,
+        status_atual:    a.status                ?? 'novo',
+        informacoes_relevantes: a.informacoes_relevantes ?? '',
         dias_aguardando: dias,
       }
     })
@@ -51,15 +54,15 @@ export async function GET() {
   return NextResponse.json(queue)
 }
 
-// aprovado_triagem em feedback_candidatos corresponde a 'aprovado' em aplicacao.status_processo
+// Maps feedback status values → aplicacao.status values
 const APLICACAO_STATUS_MAP: Record<string, string> = {
   aprovado_triagem: 'aprovado',
 }
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
+  const { status, informacoes_relevantes, id } = body
   const emails: string[] = body.emails ?? (body.email ? [body.email] : [])
-  const { status, observacoes } = body
 
   if (emails.length === 0 || !status) {
     return NextResponse.json({ error: 'email(s) e status são obrigatórios' }, { status: 400 })
@@ -71,26 +74,40 @@ export async function POST(request: NextRequest) {
   const records = emails.map(email => ({
     candidato_email: email,
     status,
-    observacoes:     observacoes ?? null,
-    updated_at:      now,
+    updated_at: now,
   }))
 
   const aplicacaoStatus = APLICACAO_STATUS_MAP[status] ?? status
 
-  // Atualiza feedback_candidatos e aplicacao.status_processo em paralelo
-  const [feedbackResult] = await Promise.all([
+  const updates: Promise<unknown>[] = [
     adminDb()
       .schema('dashboard')
       .from('feedback_candidatos')
       .upsert(records, { onConflict: 'candidato_email' }),
-    supabase
-      .from('aplicacao')
-      .update({ status_processo: aplicacaoStatus })
-      .in('email', emails),
-  ])
+  ]
 
-  if (feedbackResult.error) {
-    return NextResponse.json({ error: feedbackResult.error.message }, { status: 500 })
+  if (id) {
+    // Single record update — use id for precision
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const patch: Record<string, any> = { status: aplicacaoStatus }
+    if (informacoes_relevantes !== undefined) patch.informacoes_relevantes = informacoes_relevantes
+    updates.push(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      supabase.from('aplicacao').update(patch).eq('id', id) as any
+    )
+  } else {
+    updates.push(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      supabase.from('aplicacao').update({ status: aplicacaoStatus }).in('email', emails) as any
+    )
+  }
+
+  const [feedbackResult] = await Promise.all(updates)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((feedbackResult as any)?.error) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return NextResponse.json({ error: (feedbackResult as any).error.message }, { status: 500 })
   }
   return NextResponse.json({ ok: true })
 }

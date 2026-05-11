@@ -45,7 +45,7 @@ export async function getProcessoKpis(codigoPs: string, period: Period) {
       .eq('codigo_ps', codigoPs)
       .gte('created_at', start)
       .lte('created_at', end)
-      .eq('status_processo', 'contratado'),
+      .eq('status', 'contratado'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any)
       .schema('dashboard')
@@ -129,10 +129,10 @@ export async function getProcessoFunnelData(codigoPs: string, period: Period) {
 
   const [total, contactados, videos, aprovados, contratados] = await Promise.all([
     base(),
-    base().eq('status_processo', 'contactado'),
+    base().eq('status', 'contactado'),
     base().not('link_video', 'is', null),
-    base().eq('status_processo', 'aprovado'),
-    base().eq('status_processo', 'contratado'),
+    base().eq('status', 'aprovado'),
+    base().eq('status', 'contratado'),
   ])
 
   return [
@@ -180,7 +180,7 @@ export async function getProcessoInfo(codigoPs: string): Promise<ProcessoInfoDat
       .from('aplicacao')
       .select('*', { count: 'exact', head: true })
       .eq('codigo_ps', codigoPs)
-      .eq('status_processo', 'contratado'),
+      .eq('status', 'contratado'),
   ])
 
   const p = processoRes.data ?? {}
@@ -245,7 +245,7 @@ export async function getProcessoMetas(codigoPs: string): Promise<ProcessoMetasD
       .from('aplicacao')
       .select('*', { count: 'exact', head: true })
       .eq('codigo_ps', codigoPs)
-      .eq('status_processo', 'contratado'),
+      .eq('status', 'contratado'),
   ])
 
   const p = processoRes.data ?? {}
