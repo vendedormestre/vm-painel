@@ -10,6 +10,7 @@ import { LeadsB2B } from '@/components/leads-b2b/LeadsB2B'
 import { FeedbackModule } from '@/components/feedback/FeedbackModule'
 import { MetasModule } from '@/components/metas/MetasModule'
 import { AIInsight } from '@/components/ai-insight/AIInsight'
+import { ProcessoViewBlock } from '@/components/processo-view/ProcessoViewBlock'
 
 function ModuleSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -61,6 +62,7 @@ type PageProps = {
     pp?: string
     lp?: string
     tab?: string
+    pv?: string
   }>
 }
 
@@ -133,6 +135,21 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                 empresa={params.empresa}
                 status={params.status}
               />
+            </Suspense>
+          </ModuleSection>
+
+          {/* Módulo 2.5 — Visão por Processo */}
+          <ModuleSection title="Visão por Processo">
+            <Suspense
+              fallback={
+                <div className="flex flex-col gap-5">
+                  <BlockSkeleton height={44} />
+                  <GridSkeleton cols={4} height={96} />
+                  <GridSkeleton cols={2} height={260} />
+                </div>
+              }
+            >
+              <ProcessoViewBlock period={period} codigoPs={params.pv} />
             </Suspense>
           </ModuleSection>
 
