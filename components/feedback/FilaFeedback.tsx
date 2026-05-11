@@ -25,7 +25,7 @@ const STATUS_BTNS = [
   { value: 'contratado',       label: 'Contratado',    color: '#FF5500' },
 ]
 
-const PAGE_SIZES = [10, 25, 50, 100]
+const PAGE_SIZES = [10, 25, 50]
 
 const sel: React.CSSProperties = {
   backgroundColor: '#FFFFFF',
@@ -208,6 +208,7 @@ export function FilaFeedback() {
   const [pageSize, setPageSize] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [search, setSearch] = useState('')
   const [bulkStatus, setBulkStatus] = useState('contactado')
   const [bulkLoading, setBulkLoading] = useState(false)
   const [toast, setToast] = useState(false)
@@ -226,16 +227,26 @@ export function FilaFeedback() {
       .catch(e => { setError(e.message); setLoading(false) })
   }, [])
 
-  // Reset to page 1 when page size changes
   function handlePageSizeChange(size: number) {
     setPageSize(size)
     setCurrentPage(1)
     setSelected(new Set())
   }
 
-  const totalPages = Math.max(1, Math.ceil(queue.length / pageSize))
+  function handleSearchChange(value: string) {
+    setSearch(value)
+    setCurrentPage(1)
+    setSelected(new Set())
+  }
+
+  // Client-side search filter (all data already in memory)
+  const filtered = search.trim()
+    ? queue.filter(c => c.fullname?.toLowerCase().includes(search.trim().toLowerCase()))
+    : queue
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const safePage = Math.min(currentPage, totalPages)
-  const paginated = queue.slice((safePage - 1) * pageSize, safePage * pageSize)
+  const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   // Selection helpers
   const pageEmails = paginated.map(c => c.email)
@@ -298,8 +309,9 @@ export function FilaFeedback() {
   return (
     <div className="rounded-xl overflow-hidden" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E8E7E4' }}>
       {/* Header */}
-      <div className="px-5 py-4 border-b flex items-center justify-between flex-wrap gap-3" style={{ borderColor: '#E8E7E4' }}>
-        <div className="flex items-center gap-3">
+      <div className="px-5 py-4 border-b flex items-center gap-3 flex-wrap" style={{ borderColor: '#E8E7E4' }}>
+        {/* Title + toast */}
+        <div className="flex items-center gap-3 shrink-0">
           <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-barlow-condensed)', color: '#0D0B0A' }}>
             Fila de feedback
           </h3>
@@ -312,7 +324,38 @@ export function FilaFeedback() {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
+
+        {/* Search input */}
+        <div className="relative flex-1" style={{ minWidth: 160, maxWidth: 260 }}>
+          <svg
+            width="13" height="13"
+            viewBox="0 0 24 24" fill="none" stroke="#8A8986"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+          >
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+          </svg>
+          <input
+            type="text"
+            value={search}
+            onChange={e => handleSearchChange(e.target.value)}
+            placeholder="Buscar por nome..."
+            style={{
+              width: '100%',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #C8C7C3',
+              borderRadius: 6,
+              padding: '4px 8px 4px 28px',
+              fontSize: 12,
+              fontFamily: 'var(--font-barlow)',
+              color: '#0D0B0A',
+              outline: 'none',
+            }}
+          />
+        </div>
+
+        {/* Right controls */}
+        <div className="flex items-center gap-3 flex-wrap ml-auto">
           {queue.length > 0 && (
             <span className="text-xs px-2.5 py-1 rounded-full" style={{ backgroundColor: '#FEF3C7', color: '#92400E', fontFamily: 'var(--font-barlow)' }}>
               {queue.length} aguardando
@@ -357,10 +400,12 @@ export function FilaFeedback() {
         </div>
       )}
 
-      {queue.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="px-5 py-10 text-center">
           <p className="text-sm" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
-            Nenhum candidato aguardando feedback ✓
+            {search.trim()
+              ? `Nenhum resultado para "${search}"`
+              : 'Nenhum candidato aguardando feedback ✓'}
           </p>
         </div>
       ) : (
@@ -406,7 +451,10 @@ export function FilaFeedback() {
             style={{ borderColor: '#E8E7E4', backgroundColor: '#FAFAF9' }}
           >
             <p className="text-xs" style={{ color: '#8A8986', fontFamily: 'var(--font-barlow)' }}>
-              Página {safePage} de {totalPages} · {queue.length} total
+              Página {safePage} de {totalPages}
+              {search.trim()
+                ? ` · ${filtered.length} resultado${filtered.length !== 1 ? 's' : ''}`
+                : ` · ${queue.length} total`}
             </p>
             <div className="flex gap-2">
               <button
