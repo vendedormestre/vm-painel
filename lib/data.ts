@@ -55,7 +55,7 @@ export async function getKpiData(period: Period) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).schema('dashboard').from('feedback_candidatos').select('status'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase as any).schema('dashboard').from('meta_reports').select('verba_gasta').gte('data_relatorio', dateFrom).lte('data_relatorio', dateTo),
+    (supabase as any).schema('dashboard').from('meta_reports').select('gasto').gte('data_relatorio', dateFrom).lte('data_relatorio', dateTo),
   ])
 
   const totalCandidatos = candidatosRes.count ?? 0
@@ -65,9 +65,9 @@ export async function getKpiData(period: Period) {
 
   const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-  const metaReports = (metaReportsRes.data ?? []) as { verba_gasta: number | null }[]
+  const metaReports = (metaReportsRes.data ?? []) as { gasto: number | null }[]
   const hasMetaData = metaReports.length > 0
-  const totalVerba = metaReports.reduce((s, r) => s + (Number(r.verba_gasta) || 0), 0)
+  const totalVerba = metaReports.reduce((s, r) => s + (Number(r.gasto) || 0), 0)
   const cpl = hasMetaData && totalCandidatos > 0 ? fmt(totalVerba / totalCandidatos) : null
   const cplSub = !hasMetaData ? 'Sem dados de campanha' : undefined
 
