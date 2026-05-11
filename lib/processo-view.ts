@@ -203,3 +203,64 @@ export async function getProcessoInfo(codigoPs: string): Promise<ProcessoInfoDat
     custo_por_contratacao: totalContratados > 0 ? fmt(investimento / totalContratados) : '—',
   }
 }
+
+export type ProcessoMetasData = {
+  meta_candidatos: number
+  meta_cpl: number
+  meta_videos: number
+  meta_contratacoes: number
+  total_candidatos: number
+  total_videos: number
+  total_contratados: number
+  cpl_historico: number | null
+}
+
+export async function getProcessoMetas(codigoPs: string): Promise<ProcessoMetasData> {
+  const supabase = createAdminClient()
+
+  const [processoRes, metaRes, candRes, videoRes, contratRes] = await Promise.all([
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .schema('dashboard')
+      .from('processos_seletivos')
+      .select('meta_candidatos, meta_cpl, meta_videos, meta_contratacoes')
+      .eq('codigo_ps', codigoPs)
+      .single(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .schema('dashboard')
+      .from('meta_reports')
+      .select('gasto')
+      .eq('codigo_ps', codigoPs),
+    supabase
+      .from('aplicacao')
+      .select('*', { count: 'exact', head: true })
+      .eq('codigo_ps', codigoPs),
+    supabase
+      .from('aplicacao')
+      .select('*', { count: 'exact', head: true })
+      .eq('codigo_ps', codigoPs)
+      .not('link_video', 'is', null),
+    supabase
+      .from('aplicacao')
+      .select('*', { count: 'exact', head: true })
+      .eq('codigo_ps', codigoPs)
+      .eq('status_processo', 'contratado'),
+  ])
+
+  const p = processoRes.data ?? {}
+  const reports = (metaRes.data ?? []) as { gasto: number | null }[]
+  const investimento = reports.reduce((s, r) => s + (Number(r.gasto) || 0), 0)
+  const totalCandidatos = candRes.count ?? 0
+
+  return {
+    meta_candidatos: p.meta_candidatos ?? 100,
+    meta_cpl: Number(p.meta_cpl ?? 2.5),
+    meta_videos: p.meta_videos ?? 40,
+    meta_contratacoes: p.meta_contratacoes ?? 1,
+    total_candidatos: totalCandidatos,
+    total_videos: videoRes.count ?? 0,
+    total_contratados: contratRes.count ?? 0,
+    cpl_historico: totalCandidatos > 0 ? investimento / totalCandidatos : null,
+  }
+}

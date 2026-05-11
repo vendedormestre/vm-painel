@@ -5,11 +5,13 @@ import {
   getProcessoChannelData,
   getProcessoFunnelData,
   getProcessoInfo,
+  getProcessoMetas,
   ProcessoInfoData,
 } from '@/lib/processo-view'
 import { Period } from '@/lib/data'
 import { ProcessoSelector } from './ProcessoSelector'
 import { ProcessoPeriodFilter } from './ProcessoPeriodFilter'
+import { MetasProcesso } from './MetasProcesso'
 import { VolumeChart } from '@/components/pipeline/VolumeChart'
 import { ChannelChart } from '@/components/pipeline/ChannelChart'
 import { ConversionFunnel } from '@/components/pipeline/ConversionFunnel'
@@ -152,18 +154,20 @@ export async function ProcessoViewBlock({ codigoPs, pvPeriod }: Props) {
     channelData: Awaited<ReturnType<typeof getProcessoChannelData>>
     funnelData: Awaited<ReturnType<typeof getProcessoFunnelData>>
     info: ProcessoInfoData
+    metas: Awaited<ReturnType<typeof getProcessoMetas>>
   } | null = null
 
   if (codigoPs) {
     try {
-      const [kpis, dailyVolume, channelData, funnelData, info] = await Promise.all([
+      const [kpis, dailyVolume, channelData, funnelData, info, metas] = await Promise.all([
         getProcessoKpis(codigoPs, pvPeriod),
         getProcessoDailyVolume(codigoPs, pvPeriod),
         getProcessoChannelData(codigoPs, pvPeriod),
         getProcessoFunnelData(codigoPs, pvPeriod),
         getProcessoInfo(codigoPs),
+        getProcessoMetas(codigoPs),
       ])
-      data = { kpis, dailyVolume, channelData, funnelData, info }
+      data = { kpis, dailyVolume, channelData, funnelData, info, metas }
     } catch {
       return (
         <div className="flex flex-col gap-4">
@@ -221,6 +225,21 @@ export async function ProcessoViewBlock({ codigoPs, pvPeriod }: Props) {
               <ConversionFunnel stages={data.funnelData} />
             </Card>
             <InfoCard info={data.info} />
+          </div>
+
+          {/* Metas do Processo */}
+          <div className="flex flex-col gap-4">
+            <h3
+              style={{
+                fontFamily: 'var(--font-barlow-condensed)',
+                fontWeight: 700,
+                fontSize: '1rem',
+                color: '#0D0B0A',
+              }}
+            >
+              Metas do Processo
+            </h3>
+            <MetasProcesso codigoPs={codigoPs!} metas={data.metas} />
           </div>
         </div>
       ) : (
