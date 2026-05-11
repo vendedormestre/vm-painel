@@ -95,17 +95,17 @@ export async function getProcessoChannelData(codigoPs: string, period: Period) {
   const supabase = createAdminClient()
   const { start, end } = getPeriodDates(period)
 
-  // Column name has a hyphen — use select('*') and access via bracket notation
   const { data } = await supabase
     .from('aplicacao')
-    .select('*')
+    .select('utm_source')
     .eq('codigo_ps', codigoPs)
     .gte('created_at', start)
     .lte('created_at', end)
+    .not('utm_source', 'is', null)
 
   const grouped: Record<string, number> = {}
   data?.forEach(row => {
-    const source = ((row as Record<string, unknown>)['utm-source'] as string) || 'Direto'
+    const source = (row.utm_source as string) || 'Direto'
     grouped[source] = (grouped[source] || 0) + 1
   })
 
