@@ -2,31 +2,42 @@ import { createAdminClient } from './supabase'
 
 export type Period = 'hoje' | '7d' | '30d' | 'mes'
 
+// Brazil abolished DST in April 2019 — São Paulo is permanently UTC-3
+const SP_OFFSET = '-03:00'
+
+function spDateStr(y: number, m: number, d: number): string {
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+}
+
 export function getPeriodDates(period: Period) {
-  const now = new Date()
-  const end = new Date(now)
-  end.setHours(23, 59, 59, 999)
+  // Resolve "today" in the São Paulo timezone, not UTC
+  const todaySP = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date())
+  const [year, month, day] = todaySP.split('-').map(Number)
+
+  const startOf = (s: string) => new Date(`${s}T00:00:00.000${SP_OFFSET}`)
+  const endOf   = (s: string) => new Date(`${s}T23:59:59.999${SP_OFFSET}`)
 
   let start: Date
   switch (period) {
     case 'hoje':
-      start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      start = startOf(todaySP)
       break
-    case '7d':
-      start = new Date(now)
-      start.setDate(start.getDate() - 6)
-      start.setHours(0, 0, 0, 0)
+    case '7d': {
+      const d = new Date(year, month - 1, day - 6)
+      start = startOf(spDateStr(d.getFullYear(), d.getMonth() + 1, d.getDate()))
       break
-    case '30d':
-      start = new Date(now)
-      start.setDate(start.getDate() - 29)
-      start.setHours(0, 0, 0, 0)
+    }
+    case '30d': {
+      const d = new Date(year, month - 1, day - 29)
+      start = startOf(spDateStr(d.getFullYear(), d.getMonth() + 1, d.getDate()))
       break
-    default:
-      start = new Date(now.getFullYear(), now.getMonth(), 1)
+    }
+    default: // 'mes'
+      start = startOf(spDateStr(year, month, 1))
   }
 
-  const monthPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const end = endOf(todaySP)
+  const monthPeriod = `${year}-${String(month).padStart(2, '0')}`
   return { start: start.toISOString(), end: end.toISOString(), monthPeriod }
 }
 
