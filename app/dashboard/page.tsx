@@ -7,7 +7,6 @@ import { KpiBar } from '@/components/kpis/KpiBar'
 import { Pipeline } from '@/components/pipeline/Pipeline'
 import { LeadsB2B } from '@/components/leads-b2b/LeadsB2B'
 import { FeedbackModule } from '@/components/feedback/FeedbackModule'
-import { AIInsight } from '@/components/ai-insight/AIInsight'
 
 function ModuleSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -151,11 +150,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             >
               <FeedbackModule />
             </Suspense>
-          </ModuleSection>
-
-          {/* Módulo 6 — Análise IA */}
-          <ModuleSection title="Inteligência Artificial">
-            <AIInsight />
           </ModuleSection>
         </>
       )}
